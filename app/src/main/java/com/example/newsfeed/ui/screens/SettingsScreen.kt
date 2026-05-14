@@ -26,6 +26,8 @@ fun SettingsScreen(
     onArticleFocusModeChanged: (Boolean) -> Unit,
     hideBottomArticles: Boolean,
     onHideBottomArticlesChanged: (Boolean) -> Unit,
+    hidePromoContent: Boolean,
+    onHidePromoContentChanged: (Boolean) -> Unit,
     onBack: () -> Unit
 ) {
     BackHandler(onBack = onBack)
@@ -71,6 +73,15 @@ fun SettingsScreen(
             ) {
                 Text("Hide articles at the bottom")
                 Switch(checked = hideBottomArticles, onCheckedChange = onHideBottomArticlesChanged)
+            }
+
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Hide promotional content")
+                Switch(checked = hidePromoContent, onCheckedChange = onHidePromoContentChanged)
             }
         }
     }

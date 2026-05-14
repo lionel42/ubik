@@ -93,6 +93,48 @@ class ArticleFocusHtmlFilterTest {
         }
     }
 
+    @Test
+    fun footers_should_be_hidden_in_focus_mode() {
+        providers.forEach { provider ->
+            val original = parse(provider)
+            val footersBefore = ArticleFocusHtmlFilter.countFooterElements(original)
+
+            val filtered = ArticleFocusHtmlFilter.apply(
+                fixtureHtml(provider),
+                ArticleFocusHtmlFilter.Config(hideBottomArticles = true, hideChrome = true)
+            )
+            val footersAfter = ArticleFocusHtmlFilter.countFooterElements(filtered)
+
+            assertTrue(
+                "Found $footersAfter footers still in focus mode for $provider (had $footersBefore before filtering). " +
+                "Footers should all be removed when hideChrome=true",
+                footersAfter == 0
+            )
+        }
+    }
+
+    @Test
+    fun promo_content_should_be_hidden_when_enabled() {
+        providers.forEach { provider ->
+            val original = parse(provider)
+            val promoBefore = ArticleFocusHtmlFilter.countPromoElements(original)
+
+            val filtered = ArticleFocusHtmlFilter.apply(
+                fixtureHtml(provider),
+                ArticleFocusHtmlFilter.Config(hidePromoContent = true)
+            )
+            val promoAfter = ArticleFocusHtmlFilter.countPromoElements(filtered)
+
+            if (promoBefore > 0) {
+                assertTrue(
+                    "Promo content should be hidden for $provider when hidePromoContent=true. " +
+                    "Found $promoAfter promo elements after filtering (had $promoBefore before)",
+                    promoAfter < promoBefore
+                )
+            }
+        }
+    }
+
     private fun parse(provider: String) = org.jsoup.Jsoup.parse(fixtureHtml(provider))
 
     private fun fixtureHtml(provider: String): String {

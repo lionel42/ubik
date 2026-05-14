@@ -28,9 +28,10 @@ import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.example.newsfeed.model.RtsArticle
 
-private fun buildArticleFocusScript(hideBottomArticles: Boolean): String = """
+private fun buildArticleFocusScript(hideBottomArticles: Boolean, hidePromoContent: Boolean): String = """
 (function() {
     var hideBottomArticlesEnabled = $hideBottomArticles;
+    var hidePromoContentEnabled = $hidePromoContent;
 
     function hideNode(node) {
         if (!node || node.dataset.ubikHidden === '1') return;
@@ -52,6 +53,10 @@ private fun buildArticleFocusScript(hideBottomArticles: Boolean): String = """
 
     function isRelatedHeadingText(text) {
         return /^(mehr zum thema|à consulter également|lire aussi|voir aussi|related articles|you might also like|meistgelesene artikel|les plus lus(?:\s*-\s*.+)?|derniers articles(?:\s*-\s*.+)?)$/i.test(normalizeText(text));
+    }
+
+    function isPromoText(text) {
+        return /(app|download|install|promote|promo|ad|advertisement|sponsored|publicity|publicité|werbung|angebot|telecharger|installieren)/i.test(normalizeText(text));
     }
 
     function ensureStyle() {
@@ -126,11 +131,45 @@ private fun buildArticleFocusScript(hideBottomArticles: Boolean): String = """
         });
     }
 
+    function hidePromoBlocks() {
+        if (!hidePromoContentEnabled) return;
+
+        // Remove elements with promo class/id patterns
+        var selectors = [
+            '[class*="promo"]',
+            '[class*="ad"]',
+            '[class*="advertisement"]',
+            '[class*="sponsored"]',
+            '[class*="app-promote"]',
+            '[class*="download-app"]',
+            '[class*="install-app"]',
+            '[id*="promo"]',
+            '[id*="ad"]',
+            '[id*="advertisement"]',
+            '[id*="sponsored"]'
+        ];
+
+        selectors.forEach(function(selector) {
+            document.querySelectorAll(selector).forEach(function(element) {
+                if (element.querySelector('h1')) return;
+                hideNode(element);
+            });
+        });
+
+        // Remove sections with promo headings
+        document.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(function(node) {
+            if (isPromoText(node.textContent || node.innerText)) {
+                hideRelatedSection(node);
+            }
+        });
+    }
+
     function applyFocusMode() {
         ensureStyle();
         hideChrome();
         hideShareControls();
         hideBottomArticleBlocks();
+        hidePromoBlocks();
     }
 
     var pending = false;
@@ -187,16 +226,17 @@ private fun configureWebViewAppearance(webView: WebView, darkMode: Boolean) {
     webView.setBackgroundColor(if (darkMode) Color.BLACK else Color.WHITE)
 }
 
-private fun injectArticleFocusMode(webView: WebView, hideBottomArticles: Boolean) {
-    webView.evaluateJavascript(buildArticleFocusScript(hideBottomArticles), null)
+private fun injectArticleFocusMode(webView: WebView, hideBottomArticles: Boolean, hidePromoContent: Boolean) {
+    webView.evaluateJavascript(buildArticleFocusScript(hideBottomArticles, hidePromoContent), null)
 }
 
 private class ArticleFocusWebViewClient(
-    private val hideBottomArticles: Boolean
+    private val hideBottomArticles: Boolean,
+    private val hidePromoContent: Boolean
 ) : WebViewClient() {
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
-        view?.let { injectArticleFocusMode(it, hideBottomArticles) }
+        view?.let { injectArticleFocusMode(it, hideBottomArticles, hidePromoContent) }
     }
 }
 
@@ -207,6 +247,7 @@ fun ArticleReaderScreen(
     darkMode: Boolean,
     articleFocusMode: Boolean,
     hideBottomArticles: Boolean,
+    hidePromoContent: Boolean,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
@@ -253,7 +294,7 @@ fun ArticleReaderScreen(
                 factory = { context ->
                     WebView(context).apply {
                         webViewClient = if (articleFocusMode) {
-                            ArticleFocusWebViewClient(hideBottomArticles)
+                            ArticleFocusWebViewClient(hideBottomArticles, hidePromoContent)
                         } else {
                             WebViewClient()
                         }
@@ -265,7 +306,7 @@ fun ArticleReaderScreen(
                 },
                 update = { webView ->
                     webView.webViewClient = if (articleFocusMode) {
-                        ArticleFocusWebViewClient(hideBottomArticles)
+                        ArticleFocusWebViewClient(hideBottomArticles, hidePromoContent)
                     } else {
                         WebViewClient()
                     }
@@ -273,7 +314,7 @@ fun ArticleReaderScreen(
                     if (webView.url != article.link) {
                         webView.loadUrl(article.link)
                     } else if (articleFocusMode) {
-                        injectArticleFocusMode(webView, hideBottomArticles)
+                        injectArticleFocusMode(webView, hideBottomArticles, hidePromoContent)
                     }
                 }
             )
