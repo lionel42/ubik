@@ -14,6 +14,7 @@ val filterBlacklistTermsKey = stringSetPreferencesKey("filter_blacklist_terms")
 val filterBlacklistCatalogKey = stringSetPreferencesKey("filter_blacklist_catalog")
 val showPreviewKey = booleanPreferencesKey("show_preview")
 val articleFocusModeKey = booleanPreferencesKey("article_focus_mode")
+val hideBottomArticlesKey = booleanPreferencesKey("hide_bottom_articles")
 val enabledSourcesKey = stringSetPreferencesKey("enabled_sources")
 
 val defaultBlacklistTerms = setOf("trump", "eurovision")

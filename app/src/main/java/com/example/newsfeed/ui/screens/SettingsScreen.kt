@@ -24,6 +24,8 @@ fun SettingsScreen(
     onShowPreviewChanged: (Boolean) -> Unit,
     articleFocusMode: Boolean,
     onArticleFocusModeChanged: (Boolean) -> Unit,
+    hideBottomArticles: Boolean,
+    onHideBottomArticlesChanged: (Boolean) -> Unit,
     onBack: () -> Unit
 ) {
     BackHandler(onBack = onBack)
@@ -60,6 +62,15 @@ fun SettingsScreen(
             ) {
                 Text("Article focus mode (hide site chrome)")
                 Switch(checked = articleFocusMode, onCheckedChange = onArticleFocusModeChanged)
+            }
+
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Hide articles at the bottom")
+                Switch(checked = hideBottomArticles, onCheckedChange = onHideBottomArticlesChanged)
             }
         }
     }

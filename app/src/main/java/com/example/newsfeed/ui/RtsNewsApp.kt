@@ -44,6 +44,7 @@ import com.example.newsfeed.data.provider.NewsProvider
 import com.example.newsfeed.data.provider.ProviderDefinitions
 import com.example.newsfeed.data.readLinksKey
 import com.example.newsfeed.data.articleFocusModeKey
+import com.example.newsfeed.data.hideBottomArticlesKey
 import com.example.newsfeed.data.showPreviewKey
 import com.example.newsfeed.model.RtsArticle
 import com.example.newsfeed.ui.components.NewsList
@@ -95,6 +96,9 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     val articleFocusMode by context.dataStore.data
         .map { preferences -> preferences[articleFocusModeKey] ?: true }
         .collectAsState(initial = true)
+    val hideBottomArticles by context.dataStore.data
+        .map { preferences -> preferences[hideBottomArticlesKey] ?: false }
+        .collectAsState(initial = false)
 
     val sourceDefinitions = remember { ProviderDefinitions.all }
     val allSourceIds = remember { ProviderDefinitions.allIds }
@@ -215,6 +219,7 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                     article = article,
                     darkMode = isDarkMode,
                     articleFocusMode = articleFocusMode,
+                    hideBottomArticles = hideBottomArticles,
                     onBack = { currentScreen = AppScreen.FEED },
                     onOpenSettings = {
                         previousScreen = AppScreen.READER
@@ -230,6 +235,8 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                 onShowPreviewChanged = { saveBooleanSetting(showPreviewKey, it) },
                 articleFocusMode = articleFocusMode,
                 onArticleFocusModeChanged = { saveBooleanSetting(articleFocusModeKey, it) },
+                hideBottomArticles = hideBottomArticles,
+                onHideBottomArticlesChanged = { saveBooleanSetting(hideBottomArticlesKey, it) },
                 onBack = { currentScreen = previousScreen }
             )
         }
