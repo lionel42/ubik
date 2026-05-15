@@ -1,6 +1,8 @@
 package com.example.newsfeed.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,12 +24,10 @@ import androidx.compose.ui.unit.dp
 fun SettingsScreen(
     showPreview: Boolean,
     onShowPreviewChanged: (Boolean) -> Unit,
-    articleFocusMode: Boolean,
-    onArticleFocusModeChanged: (Boolean) -> Unit,
-    hideBottomArticles: Boolean,
-    onHideBottomArticlesChanged: (Boolean) -> Unit,
-    hidePromoContent: Boolean,
-    onHidePromoContentChanged: (Boolean) -> Unit,
+    showAllArticleContent: Boolean,
+    onShowAllArticleContentChanged: (Boolean) -> Unit,
+    hiddenArticleElements: Set<ArticleHideElement>,
+    onHiddenArticleElementsChanged: (Set<ArticleHideElement>) -> Unit,
     onBack: () -> Unit
 ) {
     BackHandler(onBack = onBack)
@@ -39,11 +39,14 @@ fun SettingsScreen(
             )
         }
     ) { innerPadding ->
+        val scrollState = rememberScrollState()
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text("Display", style = MaterialTheme.typography.titleMedium)
@@ -62,8 +65,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Article focus mode (hide site chrome)")
-                Switch(checked = articleFocusMode, onCheckedChange = onArticleFocusModeChanged)
+                Text("Article content cleanup")
             }
 
             androidx.compose.foundation.layout.Row(
@@ -71,17 +73,32 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Hide articles at the bottom")
-                Switch(checked = hideBottomArticles, onCheckedChange = onHideBottomArticlesChanged)
+                Text("Show all article content")
+                Switch(
+                    checked = showAllArticleContent,
+                    onCheckedChange = onShowAllArticleContentChanged
+                )
             }
 
-            androidx.compose.foundation.layout.Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Hide promotional content")
-                Switch(checked = hidePromoContent, onCheckedChange = onHidePromoContentChanged)
+            ArticleHideElement.entries.forEach { element ->
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(element.label)
+                    Switch(
+                        checked = element in hiddenArticleElements,
+                        onCheckedChange = { isEnabled ->
+                            val nextElements = if (isEnabled) {
+                                hiddenArticleElements + element
+                            } else {
+                                hiddenArticleElements - element
+                            }
+                            onHiddenArticleElementsChanged(nextElements)
+                        }
+                    )
+                }
             }
         }
     }

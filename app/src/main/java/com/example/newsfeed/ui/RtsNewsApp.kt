@@ -1,5 +1,7 @@
 package com.example.newsfeed.ui
 
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +21,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,12 +46,12 @@ import com.example.newsfeed.data.provider.AggregatedNewsProvider
 import com.example.newsfeed.data.provider.NewsProvider
 import com.example.newsfeed.data.provider.ProviderDefinitions
 import com.example.newsfeed.data.readLinksKey
-import com.example.newsfeed.data.articleFocusModeKey
-import com.example.newsfeed.data.hideBottomArticlesKey
-import com.example.newsfeed.data.hidePromoContentKey
+import com.example.newsfeed.data.hiddenArticleElementsKey
+import com.example.newsfeed.data.showAllArticleContentKey
 import com.example.newsfeed.data.showPreviewKey
 import com.example.newsfeed.model.RtsArticle
 import com.example.newsfeed.ui.components.NewsList
+import com.example.newsfeed.ui.screens.ArticleHideElement
 import com.example.newsfeed.ui.screens.ArticleReaderScreen
 import com.example.newsfeed.ui.screens.FiltersScreen
 import com.example.newsfeed.ui.screens.SourceToggleItem
@@ -74,7 +77,20 @@ private sealed interface FeedUiState {
 @Composable
 fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     val context = LocalContext.current
-    val isDarkMode = isSystemInDarkTheme()
+    val sharedReaderWebView = remember(context) {
+        WebView(context).apply {
+            webViewClient = WebViewClient()
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+        }
+    }
+
+    DisposableEffect(sharedReaderWebView) {
+        onDispose {
+            sharedReaderWebView.stopLoading()
+            sharedReaderWebView.destroy()
+        }
+    }
 
     val readLinks by context.dataStore.data
         .map { preferences -> preferences[readLinksKey] ?: emptySet() }
@@ -94,15 +110,18 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     val showPreview by context.dataStore.data
         .map { preferences -> preferences[showPreviewKey] ?: true }
         .collectAsState(initial = true)
-    val articleFocusMode by context.dataStore.data
-        .map { preferences -> preferences[articleFocusModeKey] ?: true }
-        .collectAsState(initial = true)
-    val hideBottomArticles by context.dataStore.data
-        .map { preferences -> preferences[hideBottomArticlesKey] ?: false }
+    val showAllArticleContent by context.dataStore.data
+        .map { preferences -> preferences[showAllArticleContentKey] ?: false }
         .collectAsState(initial = false)
-    val hidePromoContent by context.dataStore.data
-        .map { preferences -> preferences[hidePromoContentKey] ?: false }
-        .collectAsState(initial = false)
+    val hiddenArticleElements by context.dataStore.data
+        .map { preferences ->
+            preferences[hiddenArticleElementsKey]?.let { savedElements ->
+                savedElements
+                    .mapNotNull { storageKey -> ArticleHideElement.fromStorageKey(storageKey) }
+                    .toSet()
+            } ?: ArticleHideElement.defaultHidden
+        }
+        .collectAsState(initial = ArticleHideElement.defaultHidden)
 
     val sourceDefinitions = remember { ProviderDefinitions.all }
     val allSourceIds = remember { ProviderDefinitions.allIds }
@@ -220,12 +239,17 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                 currentScreen = AppScreen.FEED
             } else {
                 ArticleReaderScreen(
+                    webView = sharedReaderWebView,
                     article = article,
-                    darkMode = isDarkMode,
-                    articleFocusMode = articleFocusMode,
-                    hideBottomArticles = hideBottomArticles,
-                    hidePromoContent = hidePromoContent,
-                    onBack = { currentScreen = AppScreen.FEED },
+                    hiddenElements = if (showAllArticleContent) emptySet() else hiddenArticleElements,
+                    onBack = {
+                        sharedReaderWebView.loadData(
+                            "<html><body style='display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;color:#888;'>Loading...</body></html>",
+                            "text/html",
+                            "UTF-8"
+                        )
+                        currentScreen = AppScreen.FEED
+                    },
                     onOpenSettings = {
                         previousScreen = AppScreen.READER
                         currentScreen = AppScreen.SETTINGS
@@ -238,12 +262,15 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             SettingsScreen(
                 showPreview = showPreview,
                 onShowPreviewChanged = { saveBooleanSetting(showPreviewKey, it) },
-                articleFocusMode = articleFocusMode,
-                onArticleFocusModeChanged = { saveBooleanSetting(articleFocusModeKey, it) },
-                hideBottomArticles = hideBottomArticles,
-                onHideBottomArticlesChanged = { saveBooleanSetting(hideBottomArticlesKey, it) },
-                hidePromoContent = hidePromoContent,
-                onHidePromoContentChanged = { saveBooleanSetting(hidePromoContentKey, it) },
+                showAllArticleContent = showAllArticleContent,
+                onShowAllArticleContentChanged = { saveBooleanSetting(showAllArticleContentKey, it) },
+                hiddenArticleElements = hiddenArticleElements,
+                onHiddenArticleElementsChanged = { elements ->
+                    saveStringSetSetting(
+                        hiddenArticleElementsKey,
+                        elements.map { element -> element.storageKey }.toSet()
+                    )
+                },
                 onBack = { currentScreen = previousScreen }
             )
         }
