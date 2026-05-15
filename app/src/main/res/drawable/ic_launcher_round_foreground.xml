@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:width="72dp"
-        android:height="72dp"
+        android:width="66dp"
+        android:height="66dp"
         android:gravity="center">
         <bitmap
             android:antialias="true"
             android:filter="true"
             android:gravity="center"
-            android:src="@drawable/ic_launcher_mono_logo" />
+            android:src="@drawable/ic_launcher_round_logo" />
     </item>
 </layer-list>

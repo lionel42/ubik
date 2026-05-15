@@ -16,6 +16,20 @@ It opens the articles directly in an integrated webbrowser.
 - Article focus mode (hides site headers/navbars)
 - Filters: unread only, hide sport, keyword blacklist, source toggles
 
+## Logo generation
+
+The project includes a helper script to generate Android-ready app assets from two SVG files in `app/src/main/res/original/`:
+
+- `ubik_logo.svg`: used for the in-app menu/header logo
+- `ubik_image.svg`: used for the launcher icon assets
+
+Run:
+
+	./scripts/generate_android_assets.sh
+
+
+The script generates files required for the app.
+
 ## News Providers
 
 | Source | Language | Notes |

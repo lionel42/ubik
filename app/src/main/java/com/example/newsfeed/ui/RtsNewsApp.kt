@@ -2,11 +2,14 @@ package com.example.newsfeed.ui
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
@@ -32,9 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.example.newsfeed.R
 import com.example.newsfeed.data.dataStore
 import com.example.newsfeed.data.defaultBlacklistTerms
 import com.example.newsfeed.data.enabledSourcesKey
@@ -303,7 +308,15 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("News Feed") },
+                        title = {
+                            Image(
+                                painter = painterResource(id = R.drawable.app_menu_logo),
+                                contentDescription = "Ubik",
+                                modifier = Modifier
+                                    .width(132.dp)
+                                    .height(40.dp)
+                            )
+                        },
                         actions = {
                             IconButton(onClick = { currentScreen = AppScreen.FILTERS }) {
                                 Icon(
