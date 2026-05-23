@@ -306,7 +306,17 @@ fun ArticleReaderScreen(
 ) {
     val context = LocalContext.current
 
-    BackHandler(onBack = onBack)
+    BackHandler {
+        val currentUrl = webView.url.orEmpty()
+        val openedArticleUrl = article.link
+        val isViewingOpenedArticle = currentUrl == openedArticleUrl
+
+        if (webView.canGoBack() && !isViewingOpenedArticle) {
+            webView.goBack()
+        } else {
+            onBack()
+        }
+    }
 
     Scaffold(
         topBar = {
