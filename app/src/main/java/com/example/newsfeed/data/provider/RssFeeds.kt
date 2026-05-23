@@ -36,6 +36,12 @@ object RssFeeds {
             name = "Empa News",
             url = "https://news.google.com/rss/search?q=site:empa.ch/web/s604&hl=en-CH&gl=CH&ceid=CH:en",
             description = "Empa news via Google News RSS fallback"
+        ),
+        "sciencedaily" to RssFeedConfig(
+            id = "sciencedaily",
+            name = "ScienceDaily",
+            url = "https://www.sciencedaily.com/rss/top/science.xml",
+            description = "ScienceDaily top science headlines"
         )
     )
 

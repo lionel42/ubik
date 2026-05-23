@@ -8,6 +8,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -49,11 +50,37 @@ fun extractImageUrl(descriptionHtml: String): String? {
 }
 
 fun parsePubDateEpoch(pubDate: String): Long {
-    return runCatching {
-        ZonedDateTime.parse(pubDate, DateTimeFormatter.RFC_1123_DATE_TIME)
-            .toInstant()
-            .toEpochMilli()
-    }.getOrDefault(0L)
+    val raw = pubDate.trim()
+    if (raw.isBlank()) return 0L
+
+    val parsers = listOf(
+        DateTimeFormatter.RFC_1123_DATE_TIME,
+        DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendPattern("EEE, dd MMM yyyy HH:mm:ss z")
+            .toFormatter(Locale.ENGLISH),
+        DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendPattern("EEE, dd MMM yyyy HH:mm:ss Z")
+            .toFormatter(Locale.ENGLISH),
+        DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendPattern("yyyy-MM-dd'T'HH:mm:ssXXX")
+            .toFormatter(Locale.ENGLISH),
+        DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            .toFormatter(Locale.ENGLISH)
+    )
+
+    for (formatter in parsers) {
+        val epoch = runCatching {
+            ZonedDateTime.parse(raw, formatter).toInstant().toEpochMilli()
+        }.getOrNull()
+        if (epoch != null) return epoch
+    }
+
+    return 0L
 }
 
 fun formatPubDate(pubDate: String): String {

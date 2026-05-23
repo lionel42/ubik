@@ -31,3 +31,11 @@ class SrfNewsProvider(url: String = RssFeeds.FEEDS["srf"]?.url ?: "") : SimpleRs
  * Uses Google News RSS filtered on Empa communication pages because Empa endpoints are JS/WAF protected.
  */
 class EmpaNewsProvider : SimpleRssProvider(RssFeeds.FEEDS["empa"]?.url ?: "")
+
+/**
+ * ScienceDaily provider.
+ * Uses ScienceDaily RSS feeds.
+ */
+class ScienceDailyNewsProvider(
+    url: String = RssFeeds.FEEDS["sciencedaily"]?.url ?: ""
+) : SimpleRssProvider(url)

@@ -32,6 +32,7 @@ enum class ArticleHideElement(
         label = "Header",
         selectors = listOf(
             "header",
+            "[class*=\"head no-print\"]",
             "[role=\"banner\"]",
             ".header",
             ".site-header",

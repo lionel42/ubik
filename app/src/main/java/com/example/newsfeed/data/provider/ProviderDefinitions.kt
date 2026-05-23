@@ -107,6 +107,27 @@ object ProviderDefinitions {
             region = "CH",
             category = FeedCategory.SCIENCE,
             factory = { EmpaNewsProvider() }
+        ),
+        ProviderDefinition(
+            id = "ScienceDaily",
+            label = "ScienceDaily",
+            description = "ScienceDaily top science headlines.",
+            language = "en",
+            region = "Global",
+            category = FeedCategory.SCIENCE,
+            subFeeds = listOf(
+                SubFeedDefinition("sd_all", "All News", "https://www.sciencedaily.com/rss/all.xml", FeedCategory.NEWS),
+                SubFeedDefinition("sd_top", "Top News", "https://www.sciencedaily.com/rss/top.xml", FeedCategory.NEWS),
+                SubFeedDefinition("sd_top_science", "Top Science", "https://www.sciencedaily.com/rss/top/science.xml", FeedCategory.SCIENCE),
+                SubFeedDefinition("sd_top_health", "Top Health", "https://www.sciencedaily.com/rss/top/health.xml", FeedCategory.SCIENCE),
+                SubFeedDefinition("sd_top_technology", "Top Technology", "https://www.sciencedaily.com/rss/top/technology.xml", FeedCategory.TECHNOLOGY),
+                SubFeedDefinition("sd_top_environment", "Top Environment", "https://www.sciencedaily.com/rss/top/environment.xml", FeedCategory.SCIENCE),
+                SubFeedDefinition("sd_top_society", "Top Society", "https://www.sciencedaily.com/rss/top/society.xml", FeedCategory.GENERAL),
+                SubFeedDefinition("sd_strange_offbeat", "Strange & Offbeat", "https://www.sciencedaily.com/rss/strange_offbeat.xml", FeedCategory.GENERAL),
+                SubFeedDefinition("sd_most_popular", "Most Popular", "https://www.sciencedaily.com/rss/most_popular.xml", FeedCategory.GENERAL)
+            ),
+            factory = { ScienceDailyNewsProvider() },
+            subFeedFactory = { url -> ScienceDailyNewsProvider(url) }
         )
     )
 
