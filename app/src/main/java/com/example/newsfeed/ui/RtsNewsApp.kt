@@ -304,7 +304,15 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { UbikLogo() },
+                        title = {
+                            UbikLogo(
+                                onClick = {
+                                    scope.launch {
+                                        listState.scrollToItem(0)
+                                    }
+                                }
+                            )
+                        },
                         actions = {
                             IconButton(onClick = { currentScreen = AppScreen.FILTERS }) {
                                 Icon(
