@@ -10,7 +10,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -18,8 +17,10 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.newsfeed.model.RtsArticle
+import com.example.newsfeed.ui.components.UbikLogo
 
 enum class ArticleHideElement(
     val storageKey: String,
@@ -310,7 +311,7 @@ fun ArticleReaderScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = article.title, maxLines = 1) },
+                title = { UbikLogo(onClick = onBack) },
                 actions = {
                     IconButton(onClick = {
                         val intent = Intent(Intent.ACTION_SEND).apply {
