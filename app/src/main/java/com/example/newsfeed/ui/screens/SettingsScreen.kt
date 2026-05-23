@@ -80,6 +80,11 @@ fun SettingsScreen(
                 )
             }
 
+            Text(
+                "Hide elements",
+                style = MaterialTheme.typography.titleMedium
+            )
+
             ArticleHideElement.entries.forEach { element ->
                 androidx.compose.foundation.layout.Row(
                     modifier = Modifier.fillMaxWidth(),

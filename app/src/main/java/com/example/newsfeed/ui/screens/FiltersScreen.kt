@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
@@ -74,14 +76,17 @@ fun FiltersScreen(
             )
         }
     ) { innerPadding ->
+        val scrollState = rememberScrollState()
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("No family", style = MaterialTheme.typography.titleMedium)
+            Text("General", style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -106,7 +111,7 @@ fun FiltersScreen(
                 }
             }
 
-            Text("Categories family", style = MaterialTheme.typography.titleMedium)
+            Text("Blacklisted categories", style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -116,14 +121,14 @@ fun FiltersScreen(
                 Switch(checked = hideSport, onCheckedChange = onHideSportChanged)
             }
 
-            Text("Blacklist family", style = MaterialTheme.typography.titleMedium)
+            Text("Blacklisted keywords", style = MaterialTheme.typography.titleMedium)
             allBlacklistTerms.forEach { term ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Block title keyword: $term")
+                    Text("$term")
                     Switch(
                         checked = term in blacklistTerms,
                         onCheckedChange = { enabled ->

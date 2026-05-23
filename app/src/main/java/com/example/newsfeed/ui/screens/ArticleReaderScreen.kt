@@ -28,7 +28,7 @@ enum class ArticleHideElement(
 ) {
     HEADER(
         storageKey = "header",
-        label = "Hide header",
+        label = "Header",
         selectors = listOf(
             "header",
             "[role=\"banner\"]",
@@ -41,7 +41,7 @@ enum class ArticleHideElement(
     ),
     NAVIGATION(
         storageKey = "navigation",
-        label = "Hide navigation",
+        label = "Navigation",
         selectors = listOf(
             "nav",
             "[role=\"navigation\"]",
@@ -55,7 +55,7 @@ enum class ArticleHideElement(
     ),
     BREADCRUMB(
         storageKey = "breadcrumb",
-        label = "Hide breadcrumb",
+        label = "Breadcrumb",
         selectors = listOf(
             ".breadcrumb",
             "[class*=\"breadcrumb\"]",
@@ -64,7 +64,7 @@ enum class ArticleHideElement(
     ),
     COOKIE_CONSENT(
         storageKey = "cookie_consent",
-        label = "Hide cookie and consent banners",
+        label = "Cookie and consent banners",
         selectors = listOf(
             ".cookie",
             ".cookies",
@@ -85,7 +85,7 @@ enum class ArticleHideElement(
     ),
     NEWSLETTER_PROMPT(
         storageKey = "newsletter",
-        label = "Hide newsletter prompts",
+        label = "Newsletter prompts",
         selectors = listOf(
             ".newsletter",
             "[class*=\"newsletter\"]",
@@ -94,7 +94,7 @@ enum class ArticleHideElement(
     ),
     SHARE_CONTROLS(
         storageKey = "share_controls",
-        label = "Hide share controls",
+        label = "Share controls",
         selectors = listOf(
             "[class*=\"share\"]",
             "[class*=\"sharing\"]",
@@ -106,7 +106,7 @@ enum class ArticleHideElement(
     ),
     RELATED_ARTICLES(
         storageKey = "related_articles",
-        label = "Hide related/bottom articles",
+        label = "Related/bottom articles",
         selectors = listOf(
             "[class*=\"related\"]",
             "[class*=\"more\"]",
@@ -118,7 +118,7 @@ enum class ArticleHideElement(
     ),
     FOOTER(
         storageKey = "footer",
-        label = "Hide footer",
+        label = "Footer",
         selectors = listOf(
             "footer",
             "[role=\"contentinfo\"]",
@@ -137,7 +137,7 @@ enum class ArticleHideElement(
     ),
     PROMO_CONTENT(
         storageKey = "promo_content",
-        label = "Hide promotional content",
+        label = "Promotional content",
         selectors = listOf(
             "[class*=\"promo-banner\"]",
             "[class*=\"rts-download-banner-footer\"]",
