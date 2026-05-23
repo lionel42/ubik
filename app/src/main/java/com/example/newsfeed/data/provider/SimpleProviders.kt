@@ -11,8 +11,9 @@ class BlastNewsProvider : SimpleRssProvider(RssFeeds.FEEDS["blast"]?.url ?: "")
 /**
  * SRF news provider.
  * SRF RSS has no <category> tags; derive category from URL path segments.
+ * An optional [url] can be passed to target a specific SRF sub-feed.
  */
-class SrfNewsProvider : SimpleRssProvider(RssFeeds.FEEDS["srf"]?.url ?: "") {
+class SrfNewsProvider(url: String = RssFeeds.FEEDS["srf"]?.url ?: "") : SimpleRssProvider(url) {
     override fun categoryFromItem(title: String, link: String, xmlCategory: String): String {
         // URL pattern: https://www.srf.ch/<section>/<subsection>/...
         val path = link.removePrefix("https://www.srf.ch").trimStart('/')

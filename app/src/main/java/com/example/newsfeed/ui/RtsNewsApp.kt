@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,6 +39,7 @@ import androidx.datastore.preferences.core.edit
 import com.example.newsfeed.data.dataStore
 import com.example.newsfeed.data.defaultBlacklistTerms
 import com.example.newsfeed.data.enabledSourcesKey
+import com.example.newsfeed.data.enabledSubFeedsKey
 import com.example.newsfeed.data.filterBlacklistCatalogKey
 import com.example.newsfeed.data.filterBlacklistTermsKey
 import com.example.newsfeed.data.filterHideSportKey
@@ -55,8 +57,9 @@ import com.example.newsfeed.ui.components.UbikLogo
 import com.example.newsfeed.ui.screens.ArticleHideElement
 import com.example.newsfeed.ui.screens.ArticleReaderScreen
 import com.example.newsfeed.ui.screens.FiltersScreen
-import com.example.newsfeed.ui.screens.SourceToggleItem
+import com.example.newsfeed.ui.screens.ProviderDetailScreen
 import com.example.newsfeed.ui.screens.SettingsScreen
+import com.example.newsfeed.ui.screens.SourcesScreen
 import com.example.newsfeed.util.canonicalArticleKey
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -65,7 +68,9 @@ private enum class AppScreen {
     FEED,
     READER,
     SETTINGS,
-    FILTERS
+    FILTERS,
+    SOURCES,
+    PROVIDER_DETAIL
 }
 
 private sealed interface FeedUiState {
@@ -126,11 +131,6 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
 
     val sourceDefinitions = remember { ProviderDefinitions.all }
     val allSourceIds = remember { ProviderDefinitions.allIds }
-    val sourceToggles = remember(sourceDefinitions) {
-        sourceDefinitions.map { definition ->
-            SourceToggleItem(id = definition.id, label = definition.label)
-        }
-    }
     val enabledSources by context.dataStore.data
         .map { preferences ->
             val saved = preferences[enabledSourcesKey]
@@ -141,8 +141,27 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
         }
         .collectAsState(initial = allSourceIds)
 
-    val provider = remember(enabledSources) {
-        defaultProvider ?: AggregatedNewsProvider(enabledSources = enabledSources)
+    // Flat "providerId:subfeedId" strings → grouped map
+    val enabledSubFeedsRaw by context.dataStore.data
+        .map { preferences -> preferences[enabledSubFeedsKey] ?: emptySet() }
+        .collectAsState(initial = emptySet())
+    val enabledSubFeeds: Map<String, Set<String>> = remember(enabledSubFeedsRaw) {
+        enabledSubFeedsRaw
+            .mapNotNull { entry ->
+                val parts = entry.split(":", limit = 2)
+                if (parts.size == 2) parts[0] to parts[1] else null
+            }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, ids) -> ids.toSet() }
+    }
+
+    var selectedProviderForDetail by remember { mutableStateOf<String?>(null) }
+
+    val provider = remember(enabledSources, enabledSubFeeds) {
+        defaultProvider ?: AggregatedNewsProvider(
+            enabledSources = enabledSources,
+            enabledSubFeeds = enabledSubFeeds
+        )
     }
 
     var uiState: FeedUiState by remember { mutableStateOf(FeedUiState.Loading) }
@@ -276,26 +295,60 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             )
         }
 
+        AppScreen.SOURCES -> {
+            SourcesScreen(
+                providers = sourceDefinitions,
+                enabledSources = enabledSources,
+                enabledSubFeeds = enabledSubFeeds,
+                onSourceEnabledChanged = { sourceId, isEnabled ->
+                    val nextEnabled = if (isEnabled) enabledSources + sourceId else enabledSources - sourceId
+                    saveStringSetSetting(enabledSourcesKey, nextEnabled)
+                },
+                onProviderClicked = { providerId ->
+                    selectedProviderForDetail = providerId
+                    currentScreen = AppScreen.PROVIDER_DETAIL
+                },
+                onBack = { currentScreen = AppScreen.FEED }
+            )
+        }
+
+        AppScreen.PROVIDER_DETAIL -> {
+            val providerId = selectedProviderForDetail
+            val providerDef = sourceDefinitions.firstOrNull { it.id == providerId }
+            if (providerDef == null) {
+                currentScreen = previousScreen
+            } else {
+                ProviderDetailScreen(
+                    provider = providerDef,
+                    enabledSubFeeds = enabledSubFeeds[providerDef.id] ?: emptySet(),
+                    onSubFeedToggled = { subfeedId, enabled ->
+                        scope.launch {
+                            context.dataStore.edit { preferences ->
+                                val current = preferences[enabledSubFeedsKey] ?: emptySet()
+                                val entry = "${providerDef.id}:$subfeedId"
+                                preferences[enabledSubFeedsKey] = if (enabled) {
+                                    current + entry
+                                } else {
+                                    current - entry
+                                }
+                            }
+                        }
+                    },
+                    onBack = { currentScreen = AppScreen.SOURCES }
+                )
+            }
+        }
+
         AppScreen.FILTERS -> {
             FiltersScreen(
                 unreadOnly = filterUnreadOnly,
                 hideSport = filterHideSport,
                 blacklistCatalog = filterBlacklistCatalog,
                 blacklistTerms = filterBlacklistTerms,
-                sourceToggles = sourceToggles,
-                enabledSources = enabledSources,
                 onUnreadOnlyChanged = { saveBooleanSetting(filterUnreadOnlyKey, it) },
                 onHideSportChanged = { saveBooleanSetting(filterHideSportKey, it) },
                 onBlacklistCatalogChanged = { saveStringSetSetting(filterBlacklistCatalogKey, it) },
                 onBlacklistTermsChanged = { saveStringSetSetting(filterBlacklistTermsKey, it) },
-                onSourceEnabledChanged = { sourceId, isEnabled ->
-                    val nextEnabled = if (isEnabled) {
-                        enabledSources + sourceId
-                    } else {
-                        enabledSources - sourceId
-                    }
-                    saveStringSetSetting(enabledSourcesKey, nextEnabled)
-                },
                 onBack = { currentScreen = AppScreen.FEED }
             )
         }
@@ -314,6 +367,12 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                             )
                         },
                         actions = {
+                            IconButton(onClick = { currentScreen = AppScreen.SOURCES }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Newspaper,
+                                    contentDescription = "Sources"
+                                )
+                            }
                             IconButton(onClick = { currentScreen = AppScreen.FILTERS }) {
                                 Icon(
                                     imageVector = Icons.Filled.FilterList,

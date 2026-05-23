@@ -11,26 +11,42 @@ import kotlinx.coroutines.withContext
  * Aggregated news provider that combines multiple news sources.
  * Fetches from all providers in parallel and merges results.
  * Deduplicates by canonical link and sorts by publication date.
+ *
+ * [enabledSubFeeds] maps providerId → set of enabled sub-feed IDs.
+ * When a provider has sub-feeds and some are selected, one provider instance is
+ * created per selected sub-feed URL instead of using the default feed.
  */
 class AggregatedNewsProvider(
-    private val providers: List<Pair<String, NewsProvider>> =
-        ProviderDefinitions.all.map { definition ->
-            definition.id to definition.factory()
-        },
-    private val enabledSources: Set<String> = ProviderDefinitions.allIds
+    private val providers: List<ProviderDefinition> =
+        ProviderDefinitions.all,
+    private val enabledSources: Set<String> = ProviderDefinitions.allIds,
+    private val enabledSubFeeds: Map<String, Set<String>> = emptyMap()
 ) : NewsProvider {
     override val initialCursor: String? = null
 
     override suspend fun fetchLatest(): List<RtsArticle> = withContext(Dispatchers.IO) {
-        val tasks = providers
-            .filter { (name, _) -> name in enabledSources }
-            .map { (name, provider) ->
-                async {
-                    provider.fetchLatest().map { article ->
-                        article.copy(source = name)
-                    }
+        val providerInstances: List<Pair<String, NewsProvider>> = providers
+            .filter { def -> def.id in enabledSources }
+            .flatMap { def ->
+                val selectedSubFeedIds = enabledSubFeeds[def.id]
+                val factory = def.subFeedFactory
+                if (!selectedSubFeedIds.isNullOrEmpty() && factory != null) {
+                    // Instantiate one provider per selected sub-feed
+                    def.subFeeds
+                        .filter { sub -> sub.id in selectedSubFeedIds }
+                        .map { sub -> def.id to factory(sub.url) }
+                } else {
+                    listOf(def.id to def.factory())
                 }
             }
+
+        val tasks = providerInstances.map { (name, provider) ->
+            async {
+                provider.fetchLatest().map { article ->
+                    article.copy(source = name)
+                }
+            }
+        }
 
         val allResults = tasks.awaitAll().flatten()
 

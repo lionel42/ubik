@@ -33,11 +33,6 @@ import androidx.compose.ui.unit.dp
 import com.example.newsfeed.data.defaultBlacklistTerms
 import java.util.Locale
 
-data class SourceToggleItem(
-    val id: String,
-    val label: String
-)
-
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun FiltersScreen(
@@ -45,13 +40,10 @@ fun FiltersScreen(
     hideSport: Boolean,
     blacklistCatalog: Set<String>,
     blacklistTerms: Set<String>,
-    sourceToggles: List<SourceToggleItem>,
-    enabledSources: Set<String>,
     onUnreadOnlyChanged: (Boolean) -> Unit,
     onHideSportChanged: (Boolean) -> Unit,
     onBlacklistCatalogChanged: (Set<String>) -> Unit,
     onBlacklistTermsChanged: (Set<String>) -> Unit,
-    onSourceEnabledChanged: (String, Boolean) -> Unit,
     onBack: () -> Unit
 ) {
     BackHandler(onBack = onBack)
@@ -94,21 +86,6 @@ fun FiltersScreen(
             ) {
                 Text("Show only unread articles")
                 Switch(checked = unreadOnly, onCheckedChange = onUnreadOnlyChanged)
-            }
-
-            Text("News sources", style = MaterialTheme.typography.titleMedium)
-            sourceToggles.forEach { source ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(source.label)
-                    Switch(
-                        checked = source.id in enabledSources,
-                        onCheckedChange = { enabled -> onSourceEnabledChanged(source.id, enabled) }
-                    )
-                }
             }
 
             Text("Blacklisted categories", style = MaterialTheme.typography.titleMedium)

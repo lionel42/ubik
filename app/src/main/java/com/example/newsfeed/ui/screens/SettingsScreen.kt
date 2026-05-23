@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,9 +35,7 @@ fun SettingsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Settings") }
-            )
+            TopAppBar(title = { Text("Settings") })
         }
     ) { innerPadding ->
         val scrollState = rememberScrollState()
@@ -51,7 +50,7 @@ fun SettingsScreen(
         ) {
             Text("Display", style = MaterialTheme.typography.titleMedium)
 
-            androidx.compose.foundation.layout.Row(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -60,7 +59,7 @@ fun SettingsScreen(
                 Switch(checked = showPreview, onCheckedChange = onShowPreviewChanged)
             }
 
-            androidx.compose.foundation.layout.Row(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -72,13 +71,10 @@ fun SettingsScreen(
                 )
             }
 
-            Text(
-                "Hide elements",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text("Hide elements", style = MaterialTheme.typography.titleMedium)
 
             ArticleHideElement.entries.forEach { element ->
-                androidx.compose.foundation.layout.Row(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -100,3 +96,4 @@ fun SettingsScreen(
         }
     }
 }
+
