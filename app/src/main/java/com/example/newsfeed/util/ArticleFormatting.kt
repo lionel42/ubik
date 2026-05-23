@@ -69,6 +69,10 @@ fun formatEpochToDisplay(epoch: Long): String {
     val nowInstant = Instant.now()
     val diffMillis = nowInstant.toEpochMilli() - epoch
     if (diffMillis in 0 until 24L * 60L * 60L * 1000L) {
+        if (diffMillis < 60L * 60L * 1000L) {
+            val minutesAgo = (diffMillis / (60L * 1000L)).toInt().coerceAtLeast(1)
+            return "il y a ${minutesAgo}min"
+        }
         val hoursAgo = (diffMillis / (60L * 60L * 1000L)).toInt().coerceAtLeast(1)
         return "il y a ${hoursAgo}h"
     }
