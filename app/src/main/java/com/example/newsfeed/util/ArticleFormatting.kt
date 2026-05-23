@@ -71,10 +71,10 @@ fun formatEpochToDisplay(epoch: Long): String {
     if (diffMillis in 0 until 24L * 60L * 60L * 1000L) {
         if (diffMillis < 60L * 60L * 1000L) {
             val minutesAgo = (diffMillis / (60L * 1000L)).toInt().coerceAtLeast(1)
-            return "il y a ${minutesAgo}min"
+            return "il y a ${minutesAgo} min"
         }
         val hoursAgo = (diffMillis / (60L * 60L * 1000L)).toInt().coerceAtLeast(1)
-        return "il y a ${hoursAgo}h"
+        return "il y a ${hoursAgo} h"
     }
 
     val month = dateTime.month
