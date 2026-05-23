@@ -65,6 +65,15 @@ object ProviderDefinitions {
             factory = { BlastNewsProvider() }
         ),
         ProviderDefinition(
+            id = "BrokenTest",
+            label = "Broken RSS (Test)",
+            description = "Deliberately broken RSS feed for testing error handling.",
+            language = "en",
+            region = "Test",
+            category = FeedCategory.GENERAL,
+            factory = { SimpleRssProvider("https://invalid-feed.example.invalid/rss.xml") }
+        ),
+        ProviderDefinition(
             id = "SRF",
             label = "SRF (Swiss German)",
             description = "Schweizer Radio und Fernsehen – Swiss public broadcaster in German.",

@@ -35,6 +35,7 @@ private const val META_CATEGORY_MAX_LENGTH = 32
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun NewsList(
+    modifier: Modifier = Modifier,
     items: List<RtsArticle>,
     isRefreshing: Boolean,
     isLoadingMore: Boolean,
@@ -66,7 +67,7 @@ fun NewsList(
     PullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) {
         LazyColumn(
             modifier = Modifier

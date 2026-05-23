@@ -3,9 +3,11 @@ package com.example.newsfeed.ui
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -44,6 +46,7 @@ import com.example.newsfeed.data.filterBlacklistCatalogKey
 import com.example.newsfeed.data.filterBlacklistTermsKey
 import com.example.newsfeed.data.filterHideSportKey
 import com.example.newsfeed.data.filterUnreadOnlyKey
+import com.example.newsfeed.data.provider.ProviderDefinition
 import com.example.newsfeed.data.provider.AggregatedNewsProvider
 import com.example.newsfeed.data.provider.NewsProvider
 import com.example.newsfeed.data.provider.ProviderDefinitions
@@ -61,8 +64,13 @@ import com.example.newsfeed.ui.screens.ProviderDetailScreen
 import com.example.newsfeed.ui.screens.SettingsScreen
 import com.example.newsfeed.ui.screens.SourcesScreen
 import com.example.newsfeed.util.canonicalArticleKey
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private enum class AppScreen {
     FEED,
@@ -74,9 +82,61 @@ private enum class AppScreen {
 }
 
 private sealed interface FeedUiState {
-    data object Loading : FeedUiState
+    data class Loading(val items: List<RtsArticle> = emptyList()) : FeedUiState
     data class Success(val items: List<RtsArticle>) : FeedUiState
     data class Error(val message: String) : FeedUiState
+}
+
+private data class FeedLoadTarget(
+    val key: String,
+    val sourceLabel: String,
+    val provider: NewsProvider
+)
+
+private fun mergeFeedItems(articles: Collection<RtsArticle>): List<RtsArticle> {
+    val seenKeys = mutableSetOf<String>()
+    val deduped = mutableListOf<RtsArticle>()
+
+    for (article in articles.sortedByDescending { it.publishedAtEpochMs }) {
+        val articleKey = canonicalArticleKey(article.link)
+        if (seenKeys.add(articleKey)) {
+            deduped.add(article)
+        }
+    }
+
+    return deduped
+}
+
+private fun buildFeedLoadTargets(
+    providers: List<ProviderDefinition>,
+    enabledSources: Set<String>,
+    enabledSubFeeds: Map<String, Set<String>>
+): List<FeedLoadTarget> {
+    return providers
+        .filter { definition -> definition.id in enabledSources }
+        .flatMap { definition ->
+            val selectedSubFeedIds = enabledSubFeeds[definition.id]
+            val subFeedFactory = definition.subFeedFactory
+            if (!selectedSubFeedIds.isNullOrEmpty() && subFeedFactory != null) {
+                definition.subFeeds
+                    .filter { subFeed -> subFeed.id in selectedSubFeedIds }
+                    .map { subFeed ->
+                        FeedLoadTarget(
+                            key = "${definition.id}:${subFeed.id}",
+                            sourceLabel = subFeed.label,
+                            provider = subFeedFactory(subFeed.url)
+                        )
+                    }
+            } else {
+                listOf(
+                    FeedLoadTarget(
+                        key = definition.id,
+                        sourceLabel = definition.label,
+                        provider = definition.factory()
+                    )
+                )
+            }
+        }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -164,7 +224,7 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
         )
     }
 
-    var uiState: FeedUiState by remember { mutableStateOf(FeedUiState.Loading) }
+    var uiState: FeedUiState by remember { mutableStateOf(FeedUiState.Loading()) }
     var isRefreshing by remember { mutableStateOf(false) }
     var isLoadingMore by remember { mutableStateOf(false) }
     var hasLoadedOnce by remember { mutableStateOf(false) }
@@ -175,19 +235,94 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
+    fun visibleArticles(items: List<RtsArticle>): List<RtsArticle> {
+        return items.filter { article ->
+            val filteredBySport = filterHideSport && (
+                article.link.contains("/sport/", ignoreCase = true) ||
+                    article.category.contains("sport", ignoreCase = true)
+                )
+            val filteredByBlacklist = filterBlacklistTerms.any { term ->
+                term.isNotBlank() && article.title.contains(term, ignoreCase = true)
+            }
+            val filteredByUnread = filterUnreadOnly && (article.link in readLinks)
+
+            !filteredBySport && !filteredByBlacklist && !filteredByUnread
+        }
+    }
+
     fun refresh(byPull: Boolean = false) {
         scope.launch {
+            val currentItems = when (val state = uiState) {
+                is FeedUiState.Loading -> state.items
+                is FeedUiState.Success -> state.items
+                is FeedUiState.Error -> emptyList()
+            }
+
             if (hasLoadedOnce && byPull) {
                 isRefreshing = true
             } else {
-                uiState = FeedUiState.Loading
+                uiState = FeedUiState.Loading(currentItems)
             }
 
             try {
-                val feed = provider.fetchLatest()
-                uiState = FeedUiState.Success(feed)
-                hasLoadedOnce = true
-                nextCursor = provider.initialCursor
+                if (defaultProvider != null) {
+                    val feed = defaultProvider.fetchLatest()
+                    uiState = FeedUiState.Success(feed)
+                    nextCursor = defaultProvider.initialCursor
+                    hasLoadedOnce = true
+                } else {
+                    val loadTargets = buildFeedLoadTargets(
+                        providers = sourceDefinitions,
+                        enabledSources = enabledSources,
+                        enabledSubFeeds = enabledSubFeeds
+                    )
+
+                    if (loadTargets.isEmpty()) {
+                        uiState = FeedUiState.Success(emptyList())
+                        nextCursor = null
+                        hasLoadedOnce = true
+                    } else {
+                        val loadedByTarget = linkedMapOf<String, List<RtsArticle>>()
+                        var failedTargets = 0
+                        val mutex = Mutex()
+
+                        suspend fun publishSnapshot() {
+                            val combined = visibleArticles(mergeFeedItems(loadedByTarget.values.flatten()))
+                            val remaining = loadTargets.size - loadedByTarget.size - failedTargets
+                            uiState = if (remaining > 0) {
+                                FeedUiState.Loading(combined)
+                            } else if (combined.isNotEmpty()) {
+                                FeedUiState.Success(combined)
+                            } else {
+                                FeedUiState.Error("Unable to load news feed")
+                            }
+                        }
+
+                        coroutineScope {
+                            loadTargets.map { target ->
+                                launch(Dispatchers.IO) {
+                                    try {
+                                        val items = target.provider.fetchLatest().map { article ->
+                                            article.copy(source = target.sourceLabel)
+                                        }
+                                        mutex.withLock {
+                                            loadedByTarget[target.key] = items
+                                            publishSnapshot()
+                                        }
+                                    } catch (_: Exception) {
+                                        mutex.withLock {
+                                            failedTargets += 1
+                                            publishSnapshot()
+                                        }
+                                    }
+                                }
+                            }.joinAll()
+                        }
+
+                        hasLoadedOnce = true
+                        nextCursor = null
+                    }
+                }
             } catch (e: Exception) {
                 uiState = FeedUiState.Error(e.message ?: "Unknown error")
             } finally {
@@ -248,7 +383,7 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(defaultProvider ?: provider) {
         refresh()
     }
 
@@ -395,17 +530,40 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             ) { innerPadding ->
                 Surface(modifier = Modifier.padding(innerPadding)) {
                     when (val state = uiState) {
-                        FeedUiState.Loading -> {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                CircularProgressIndicator()
-                                Text(
-                                    text = "Loading news...",
-                                    modifier = Modifier.padding(top = 12.dp)
-                                )
+                        is FeedUiState.Loading -> {
+                            val items = visibleArticles(state.items)
+                            if (items.isEmpty()) {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                    Text(
+                                        text = "Loading news...",
+                                        modifier = Modifier.padding(top = 12.dp)
+                                    )
+                                }
+                            } else {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    NewsList(
+                                        modifier = Modifier.fillMaxSize(),
+                                        items = items,
+                                        isRefreshing = isRefreshing,
+                                        isLoadingMore = isLoadingMore,
+                                        canLoadMore = nextCursor != null,
+                                        onRefresh = { refresh(byPull = true) },
+                                        onLoadMore = { loadMoreIfNeeded() },
+                                        readLinks = readLinks,
+                                        showPreview = showPreview,
+                                        listState = listState,
+                                        onArticleClick = { article ->
+                                            markAsRead(article.link)
+                                            selectedArticle = article
+                                            currentScreen = AppScreen.READER
+                                        }
+                                    )
+                                }
                             }
                         }
 
@@ -432,20 +590,10 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                         }
 
                         is FeedUiState.Success -> {
-                            val filteredItems = state.items.filter { article ->
-                                val filteredBySport = filterHideSport && (
-                                    article.link.contains("/sport/", ignoreCase = true) ||
-                                        article.category.contains("sport", ignoreCase = true)
-                                    )
-                                val filteredByBlacklist = filterBlacklistTerms.any { term ->
-                                    term.isNotBlank() && article.title.contains(term, ignoreCase = true)
-                                }
-                                val filteredByUnread = filterUnreadOnly && (article.link in readLinks)
-
-                                !filteredBySport && !filteredByBlacklist && !filteredByUnread
-                            }
+                            val filteredItems = visibleArticles(state.items)
 
                             NewsList(
+                                modifier = Modifier.fillMaxSize(),
                                 items = filteredItems,
                                 isRefreshing = isRefreshing,
                                 isLoadingMore = isLoadingMore,
