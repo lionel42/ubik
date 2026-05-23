@@ -30,6 +30,8 @@ import com.example.newsfeed.model.RtsArticle
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
+private const val META_CATEGORY_MAX_LENGTH = 32
+
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun NewsList(
@@ -104,7 +106,14 @@ fun NewsList(
                                 text = article.title,
                                 style = MaterialTheme.typography.titleMedium
                             )
-                            val meta = listOf(article.source, article.category, article.pubDateLabel)
+                            val metaCategory = article.category.trim().let { category ->
+                                if (category.length > META_CATEGORY_MAX_LENGTH) {
+                                    category.take(META_CATEGORY_MAX_LENGTH - 3).trimEnd() + "..."
+                                } else {
+                                    category
+                                }
+                            }
+                            val meta = listOf(article.source, metaCategory, article.pubDateLabel)
                                 .filter { it.isNotBlank() }
                                 .joinToString(" • ")
                             if (meta.isNotBlank()) {
