@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.newsfeed.data.defaultCydoniaNames
-import com.example.newsfeed.data.defaultBlacklistTerms
 import java.util.Locale
 
 @Composable
@@ -54,21 +54,11 @@ fun FiltersScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var newBlacklistTerm by remember { mutableStateOf("") }
 
-    val allBlacklistTerms = (defaultBlacklistTerms + blacklistCatalog).toList().sorted()
+    val allBlacklistTerms = (blacklistCatalog).toList().sorted()
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Filters") },
-                actions = {
-                    IconButton(onClick = { showAddDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Add blacklist keyword"
-                        )
-                    }
-                }
-            )
+            TopAppBar(title = { Text("Filters") })
         }
     ) { innerPadding ->
         val scrollState = rememberScrollState()
@@ -91,7 +81,7 @@ fun FiltersScreen(
                 Switch(checked = unreadOnly, onCheckedChange = onUnreadOnlyChanged)
             }
 
-            Text("Blacklisted categories", style = MaterialTheme.typography.titleMedium)
+            Text("Ubik filters", style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -120,24 +110,49 @@ fun FiltersScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Text("Blacklisted keywords", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Blacklisted keywords", style = MaterialTheme.typography.titleMedium)
+                IconButton(onClick = { showAddDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add blacklist keyword"
+                    )
+                }
+            }
             allBlacklistTerms.forEach { term ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("$term")
-                    Switch(
-                        checked = term in blacklistTerms,
-                        onCheckedChange = { enabled ->
-                            if (enabled) {
-                                onBlacklistTermsChanged(blacklistTerms + term)
-                            } else {
+                    Text(term, modifier = Modifier.weight(1f))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Switch(
+                            checked = term in blacklistTerms,
+                            onCheckedChange = { enabled ->
+                                if (enabled) {
+                                    onBlacklistTermsChanged(blacklistTerms + term)
+                                } else {
+                                    onBlacklistTermsChanged(blacklistTerms - term)
+                                }
+                            }
+                        )
+                        IconButton(
+                            onClick = {
+                                onBlacklistCatalogChanged(blacklistCatalog - term)
                                 onBlacklistTermsChanged(blacklistTerms - term)
                             }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Remove blacklist keyword"
+                            )
                         }
-                    )
+                    }
                 }
             }
             if (allBlacklistTerms.isEmpty()) {

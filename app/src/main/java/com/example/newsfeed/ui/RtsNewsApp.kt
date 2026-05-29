@@ -45,7 +45,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.example.newsfeed.data.dataStore
 import com.example.newsfeed.data.defaultCydoniaNames
-import com.example.newsfeed.data.defaultBlacklistTerms
 import com.example.newsfeed.data.enabledSourcesKey
 import com.example.newsfeed.data.filterBlacklistCatalogKey
 import com.example.newsfeed.data.filterBlacklistTermsKey
@@ -172,8 +171,8 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
         .map { preferences -> preferences[filterCydoniaKey] ?: false }
         .collectAsState(initial = false)
     val filterBlacklistTerms by context.dataStore.data
-        .map { preferences -> preferences[filterBlacklistTermsKey] ?: defaultBlacklistTerms }
-        .collectAsState(initial = defaultBlacklistTerms)
+        .map { preferences -> preferences[filterBlacklistTermsKey] ?: emptySet() }
+        .collectAsState(initial = emptySet()  )
     val filterBlacklistCatalog by context.dataStore.data
         .map { preferences -> preferences[filterBlacklistCatalogKey] ?: emptySet() }
         .collectAsState(initial = emptySet())
