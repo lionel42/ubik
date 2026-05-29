@@ -48,6 +48,36 @@ object RssFeeds {
             name = "Plant Based News",
             url = "https://plantbasednews.org/feed/",
             description = "Plant Based News on plant-based living and sustainability"
+        ),
+        "bbc" to RssFeedConfig(
+            id = "bbc",
+            name = "BBC News",
+            url = "https://feeds.bbci.co.uk/news/rss.xml?edition=int",
+            description = "BBC News international headlines"
+        ),
+        "bbc_world" to RssFeedConfig(
+            id = "bbc_world",
+            name = "BBC World",
+            url = "https://feeds.bbci.co.uk/news/world/rss.xml?edition=int",
+            description = "BBC world news"
+        ),
+        "bbc_business" to RssFeedConfig(
+            id = "bbc_business",
+            name = "BBC Business",
+            url = "https://feeds.bbci.co.uk/news/business/rss.xml?edition=int",
+            description = "BBC business news"
+        ),
+        "bbc_technology" to RssFeedConfig(
+            id = "bbc_technology",
+            name = "BBC Technology",
+            url = "https://feeds.bbci.co.uk/news/technology/rss.xml?edition=int",
+            description = "BBC technology news"
+        ),
+        "bbc_science" to RssFeedConfig(
+            id = "bbc_science",
+            name = "BBC Science & Environment",
+            url = "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml?edition=int",
+            description = "BBC science and environment news"
         )
     )
 

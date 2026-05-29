@@ -92,6 +92,51 @@ object ProviderDefinitions {
             region = "Global",
             category = FeedCategory.NEWS,
             defaultFeedUrl = "https://plantbasednews.org/feed/"
+        ),
+        ProviderDefinition(
+            id = "BBCNews",
+            label = "BBC News",
+            description = "BBC News international headlines.",
+            language = "en",
+            region = "Global",
+            category = FeedCategory.NEWS,
+            defaultFeedUrl = "https://feeds.bbci.co.uk/news/rss.xml?edition=int"
+        ),
+        ProviderDefinition(
+            id = "BBCWorld",
+            label = "BBC World",
+            description = "BBC world news.",
+            language = "en",
+            region = "Global",
+            category = FeedCategory.NEWS,
+            defaultFeedUrl = "https://feeds.bbci.co.uk/news/world/rss.xml?edition=int"
+        ),
+        ProviderDefinition(
+            id = "BBCBusiness",
+            label = "BBC Business",
+            description = "BBC business news.",
+            language = "en",
+            region = "Global",
+            category = FeedCategory.ECONOMY,
+            defaultFeedUrl = "https://feeds.bbci.co.uk/news/business/rss.xml?edition=int"
+        ),
+        ProviderDefinition(
+            id = "BBCTechnology",
+            label = "BBC Technology",
+            description = "BBC technology news.",
+            language = "en",
+            region = "Global",
+            category = FeedCategory.TECHNOLOGY,
+            defaultFeedUrl = "https://feeds.bbci.co.uk/news/technology/rss.xml?edition=int"
+        ),
+        ProviderDefinition(
+            id = "BBCScience",
+            label = "BBC Science & Environment",
+            description = "BBC science and environment news.",
+            language = "en",
+            region = "Global",
+            category = FeedCategory.SCIENCE,
+            defaultFeedUrl = "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml?edition=int"
         )
     )
 

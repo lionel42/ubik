@@ -59,6 +59,7 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
         var category = ""
         var pubDate = ""
         var description = ""
+        var imageUrl: String? = null
 
         while (eventType != XmlPullParser.END_DOCUMENT) {
             when (eventType) {
@@ -70,6 +71,7 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
                         category = ""
                         pubDate = ""
                         description = ""
+                        imageUrl = null
                     } else if (inItem) {
                         when (parser.name.lowercase()) {
                             "title" -> title = parser.nextText().trim()
@@ -80,6 +82,19 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
                             }
                             "pubdate" -> pubDate = parser.nextText().trim()
                             "description" -> description = parser.nextText().trim()
+                            "media:thumbnail", "media:content", "enclosure" -> {
+                                // BBC and other feeds commonly expose lead image in media/enclosure tags.
+                                val candidateUrl = parser.findAttributeValue("url")
+                                val contentType = parser.findAttributeValue("type")
+                                if (!candidateUrl.isNullOrBlank()) {
+                                    val isLikelyImage = contentType.isNullOrBlank() ||
+                                        contentType.startsWith("image/", ignoreCase = true) ||
+                                        parser.name.equals("media:thumbnail", ignoreCase = true)
+                                    if (isLikelyImage && imageUrl.isNullOrBlank()) {
+                                        imageUrl = candidateUrl.trim()
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -95,7 +110,7 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
                                 pubDateLabel = formatPubDate(pubDate),
                                 publishedAtEpochMs = parsePubDateEpoch(pubDate),
                                 summary = extractSummary(description),
-                                imageUrl = extractImageUrl(description)
+                                imageUrl = imageUrl ?: extractImageUrl(description)
                             )
                         }
                     }
@@ -105,5 +120,14 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
         }
 
         return items
+    }
+
+    private fun XmlPullParser.findAttributeValue(attributeName: String): String? {
+        for (index in 0 until attributeCount) {
+            if (getAttributeName(index).equals(attributeName, ignoreCase = true)) {
+                return getAttributeValue(index)
+            }
+        }
+        return null
     }
 }
