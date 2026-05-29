@@ -64,13 +64,24 @@ import com.example.newsfeed.ui.screens.ProviderDetailScreen
 import com.example.newsfeed.ui.screens.SettingsScreen
 import com.example.newsfeed.ui.screens.SourcesScreen
 import com.example.newsfeed.util.canonicalArticleKey
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+
+private const val STALE_THRESHOLD_MS = 10 * 60 * 1000L
 
 private enum class AppScreen {
     FEED,
@@ -191,20 +202,24 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
 
     val sourceDefinitions = remember { ProviderDefinitions.all }
     val allSourceIds = remember { ProviderDefinitions.allIds }
-    val enabledSources by context.dataStore.data
+    // null = DataStore hasn't emitted yet; non-null = real saved value
+    val enabledSourcesLoaded: Set<String>? by context.dataStore.data
         .map { preferences ->
             val saved = preferences[enabledSourcesKey]
-            when {
-                saved.isNullOrEmpty() -> allSourceIds
-                else -> saved.intersect(allSourceIds).ifEmpty { allSourceIds }
-            }
+            // null means first run/no saved preference yet -> all sources enabled by default.
+            // A saved empty set is a valid user choice and must stay empty.
+            if (saved == null) allSourceIds else saved.intersect(allSourceIds)
         }
-        .collectAsState(initial = allSourceIds)
+        .collectAsState(initial = null)
+    val enabledSources = enabledSourcesLoaded ?: allSourceIds
+
+    // null = DataStore hasn't emitted yet; non-null = real saved value
+    val enabledSubFeedsRawLoaded: Set<String>? by context.dataStore.data
+        .map { preferences -> preferences[enabledSubFeedsKey] ?: emptySet() }
+        .collectAsState(initial = null)
+    val enabledSubFeedsRaw = enabledSubFeedsRawLoaded ?: emptySet()
 
     // Flat "providerId:subfeedId" strings → grouped map
-    val enabledSubFeedsRaw by context.dataStore.data
-        .map { preferences -> preferences[enabledSubFeedsKey] ?: emptySet() }
-        .collectAsState(initial = emptySet())
     val enabledSubFeeds: Map<String, Set<String>> = remember(enabledSubFeedsRaw) {
         enabledSubFeedsRaw
             .mapNotNull { entry ->
@@ -228,6 +243,8 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     var isRefreshing by remember { mutableStateOf(false) }
     var isLoadingMore by remember { mutableStateOf(false) }
     var hasLoadedOnce by remember { mutableStateOf(false) }
+    var lastRefreshTimeMs by remember { mutableStateOf(0L) }
+    var refreshJob: Job? by remember { mutableStateOf(null) }
     var nextCursor by remember { mutableStateOf(provider.initialCursor) }
     var selectedArticle by remember { mutableStateOf<RtsArticle?>(null) }
     var currentScreen by remember { mutableStateOf(AppScreen.FEED) }
@@ -251,7 +268,10 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     }
 
     fun refresh(byPull: Boolean = false) {
-        scope.launch {
+        val previousJob = refreshJob
+        refreshJob = scope.launch {
+            previousJob?.cancelAndJoin()
+
             val currentItems = when (val state = uiState) {
                 is FeedUiState.Loading -> state.items
                 is FeedUiState.Success -> state.items
@@ -328,6 +348,7 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             } finally {
                 isRefreshing = false
                 isLoadingMore = false
+                lastRefreshTimeMs = System.currentTimeMillis()
             }
         }
     }
@@ -383,8 +404,31 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
         }
     }
 
+    // On first composition (and whenever sources/subfeeds change), wait for DataStore to have
+    // emitted the real saved preferences before loading, so startup matches manual reload.
     LaunchedEffect(defaultProvider ?: provider) {
+        if (defaultProvider == null && (enabledSourcesLoaded == null || enabledSubFeedsRawLoaded == null)) {
+            snapshotFlow { enabledSourcesLoaded to enabledSubFeedsRawLoaded }
+                .filter { loaded -> loaded.first != null && loaded.second != null }
+                .first()
+        }
         refresh()
+    }
+
+    // Refresh on app resume if the feed is stale, using the same refresh() as manual reload.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val currentRefresh by rememberUpdatedState(newValue = { refresh(byPull = true) })
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME
+                && hasLoadedOnce
+                && System.currentTimeMillis() - lastRefreshTimeMs > STALE_THRESHOLD_MS
+            ) {
+                scope.launch { currentRefresh() }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     when (currentScreen) {
