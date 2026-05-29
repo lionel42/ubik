@@ -137,6 +137,15 @@ object ProviderDefinitions {
             ),
             factory = { ScienceDailyNewsProvider() },
             subFeedFactory = { url -> ScienceDailyNewsProvider(url) }
+        ),
+        ProviderDefinition(
+            id = "PlantBasedNews",
+            label = "Plant Based News",
+            description = "Plant Based News – plant-based living and sustainability news.",
+            language = "en",
+            region = "Global",
+            category = FeedCategory.NEWS,
+            factory = { PlantBasedNewsProvider() }
         )
     )
 

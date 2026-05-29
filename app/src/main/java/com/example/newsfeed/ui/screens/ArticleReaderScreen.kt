@@ -1,6 +1,9 @@
 package com.example.newsfeed.ui.screens
 
 import android.content.Intent
+import android.net.Uri
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
@@ -61,6 +64,7 @@ enum class ArticleHideElement(
         selectors = listOf(
             ".breadcrumb",
             "[class*=\"breadcrumb\"]",
+            "[data-class*=\"heading--contains-categories\"]",
             "[id*=\"breadcrumb\"]"
         )
     ),
@@ -143,6 +147,8 @@ enum class ArticleHideElement(
         selectors = listOf(
             "[class*=\"promo-banner\"]",
             "[class*=\"rts-download-banner-footer\"]",
+            "[id*=\"adngin\"]",
+            "[id*=\"snigel\"]",
         )
     );
 
@@ -287,9 +293,40 @@ private fun injectArticleFocusMode(webView: WebView, hiddenElements: Set<Article
     webView.evaluateJavascript(buildArticleFocusScript(hiddenElements), null)
 }
 
+private val blockedAdHosts = setOf(
+    "adengine.snigelweb.com",
+    "cdn.snigelweb.com"
+)
+
+private fun shouldBlockAdRequest(uri: Uri?): Boolean {
+    if (uri == null) return false
+    val host = uri.host?.lowercase().orEmpty()
+    val url = uri.toString().lowercase()
+
+    if (blockedAdHosts.any { blockedHost -> host == blockedHost || host.endsWith(".$blockedHost") }) {
+        return true
+    }
+
+    return url.contains("/adngin.js") || url.contains("adngin") || url.contains("snigel")
+}
+
+private fun emptyBlockedResponse(): WebResourceResponse {
+    return WebResourceResponse("text/plain", "utf-8", 204, "No Content", emptyMap(), null)
+}
+
 private class ArticleFocusWebViewClient(
     val hiddenElements: Set<ArticleHideElement>
 ) : WebViewClient() {
+    override fun shouldInterceptRequest(
+        view: WebView?,
+        request: WebResourceRequest?
+    ): WebResourceResponse? {
+        if (shouldBlockAdRequest(request?.url)) {
+            return emptyBlockedResponse()
+        }
+        return super.shouldInterceptRequest(view, request)
+    }
+
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
         view?.let { injectArticleFocusMode(it, hiddenElements) }

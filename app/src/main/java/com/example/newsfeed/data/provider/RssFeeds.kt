@@ -42,6 +42,12 @@ object RssFeeds {
             name = "ScienceDaily",
             url = "https://www.sciencedaily.com/rss/top/science.xml",
             description = "ScienceDaily top science headlines"
+        ),
+        "plantbasednews" to RssFeedConfig(
+            id = "plantbasednews",
+            name = "Plant Based News",
+            url = "https://plantbasednews.org/feed/",
+            description = "Plant Based News on plant-based living and sustainability"
         )
     )
 

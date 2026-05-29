@@ -38,6 +38,7 @@ The script generates files required for the app.
 | [Blast](https://www.blast-info.fr) | French | Independent investigative media |
 | [SRF](https://www.srf.ch) | German (Swiss) | Swiss public broadcaster |
 | [Empa](https://www.empa.ch) | English | Swiss materials science research news |
+| [Plant Based News](https://plantbasednews.org) | English | Plant-based living and sustainability news |
 
 ## License
 

@@ -39,3 +39,9 @@ class EmpaNewsProvider : SimpleRssProvider(RssFeeds.FEEDS["empa"]?.url ?: "")
 class ScienceDailyNewsProvider(
     url: String = RssFeeds.FEEDS["sciencedaily"]?.url ?: ""
 ) : SimpleRssProvider(url)
+
+/**
+ * Plant Based News provider.
+ * Uses Plant Based News WordPress RSS feed.
+ */
+class PlantBasedNewsProvider : SimpleRssProvider(RssFeeds.FEEDS["plantbasednews"]?.url ?: "")
