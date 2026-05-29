@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,8 +32,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.newsfeed.data.defaultCydoniaNames
+import com.example.newsfeed.ui.components.UbikLogo
 import java.util.Locale
+
+private data class ToggleFilterItem(
+    val label: String,
+    val checked: Boolean,
+    val onCheckedChange: (Boolean) -> Unit,
+    val infoMessage: String? = null,
+    val infoContentDescription: String = "Filter info"
+)
+
+private data class FilterTooltip(
+    val filterName: String,
+    val message: String
+)
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,12 +67,17 @@ fun FiltersScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     var newBlacklistTerm by remember { mutableStateOf("") }
+    var infoTooltip by remember { mutableStateOf<FilterTooltip?>(null) }
 
     val allBlacklistTerms = (blacklistCatalog).toList().sorted()
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Filters") })
+            TopAppBar(
+                title = {
+                    UbikLogo(onClick = onBack)
+                }
+            )
         }
     ) { innerPadding ->
         val scrollState = rememberScrollState()
@@ -71,44 +90,37 @@ fun FiltersScreen(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("General", style = MaterialTheme.typography.titleMedium)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Show only unread articles")
-                Switch(checked = unreadOnly, onCheckedChange = onUnreadOnlyChanged)
-            }
+            val toggleFilters = listOf(
+                ToggleFilterItem(
+                    label = "Unread only",
+                    checked = unreadOnly,
+                    onCheckedChange = onUnreadOnlyChanged
+                ),
+                ToggleFilterItem(
+                    label = "Hide sport",
+                    checked = hideSport,
+                    onCheckedChange = onHideSportChanged,
+                    infoMessage = "Sport is the new opium of the masses",
+                    infoContentDescription = "Sport filter info"
+                ),
+                ToggleFilterItem(
+                    label = "Cydonia",
+                    checked = cydonia,
+                    onCheckedChange = onCydoniaChanged,
+                    infoMessage = "How can we win when fools can be kings? Time has come to make things right and remove these fools from the news",
+                    infoContentDescription = "Cydonia filter info"
+                )
+            )
 
             Text("Ubik filters", style = MaterialTheme.typography.titleMedium)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Hide sport articles")
-                Switch(checked = hideSport, onCheckedChange = onHideSportChanged)
+            toggleFilters.forEach { filter ->
+                ToggleFilterRow(
+                    item = filter,
+                    onInfoClick = { filterName, message ->
+                        infoTooltip = FilterTooltip(filterName = filterName, message = message)
+                    }
+                )
             }
-            Text(
-                text = "Sport is the new opium of the masses",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Cydonia filter")
-                Switch(checked = cydonia, onCheckedChange = onCydoniaChanged)
-            }
-            Text(
-                text = "How can we win when fools can be kings? Time has come to make things right and remove these fools from the news",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -202,5 +214,45 @@ fun FiltersScreen(
                 )
             }
         )
+    }
+
+    val tooltip = infoTooltip
+    if (tooltip != null) {
+        AlertDialog(
+            onDismissRequest = { infoTooltip = null },
+            confirmButton = {
+                TextButton(onClick = { infoTooltip = null }) {
+                    Text("OK")
+                }
+            },
+            title = { Text("${tooltip.filterName} filter") },
+            text = { Text(tooltip.message) }
+        )
+    }
+}
+
+@Composable
+private fun ToggleFilterRow(
+    item: ToggleFilterItem,
+    onInfoClick: (String, String) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(item.label)
+            val infoMessage = item.infoMessage
+            if (infoMessage != null) {
+                IconButton(onClick = { onInfoClick(item.label, infoMessage) }) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = item.infoContentDescription
+                    )
+                }
+            }
+        }
+        Switch(checked = item.checked, onCheckedChange = item.onCheckedChange)
     }
 }
