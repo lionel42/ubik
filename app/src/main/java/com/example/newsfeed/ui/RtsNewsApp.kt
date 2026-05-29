@@ -44,10 +44,12 @@ import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.example.newsfeed.data.dataStore
+import com.example.newsfeed.data.defaultCydoniaNames
 import com.example.newsfeed.data.defaultBlacklistTerms
 import com.example.newsfeed.data.enabledSourcesKey
 import com.example.newsfeed.data.filterBlacklistCatalogKey
 import com.example.newsfeed.data.filterBlacklistTermsKey
+import com.example.newsfeed.data.filterCydoniaKey
 import com.example.newsfeed.data.filterHideSportKey
 import com.example.newsfeed.data.filterUnreadOnlyKey
 import com.example.newsfeed.data.provider.ProviderDefinition
@@ -166,6 +168,9 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     val filterHideSport by context.dataStore.data
         .map { preferences -> preferences[filterHideSportKey] ?: false }
         .collectAsState(initial = false)
+    val filterCydonia by context.dataStore.data
+        .map { preferences -> preferences[filterCydoniaKey] ?: false }
+        .collectAsState(initial = false)
     val filterBlacklistTerms by context.dataStore.data
         .map { preferences -> preferences[filterBlacklistTermsKey] ?: defaultBlacklistTerms }
         .collectAsState(initial = defaultBlacklistTerms)
@@ -224,11 +229,23 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
 
     fun hiddenReasonsForArticle(article: RtsArticle): List<String> {
             val reasons = mutableListOf<String>()
+            val articleText = listOf(article.title, article.summary, article.category)
+                .joinToString(" ")
+
             val filteredBySport = filterHideSport && (
                 article.link.contains("/sport/", ignoreCase = true) ||
                     article.category.contains("sport", ignoreCase = true)
                 )
             if (filteredBySport) reasons += "sport"
+
+            val matchedCydoniaName = if (filterCydonia) {
+                defaultCydoniaNames.firstOrNull { name ->
+                    name.isNotBlank() && articleText.contains(name, ignoreCase = true)
+                }
+            } else {
+                null
+            }
+            if (matchedCydoniaName != null) reasons += "cydonia:$matchedCydoniaName"
 
             val matchedBlacklistTerm = filterBlacklistTerms.firstOrNull { term ->
                 term.isNotBlank() && article.title.contains(term, ignoreCase = true)
@@ -500,10 +517,12 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             FiltersScreen(
                 unreadOnly = filterUnreadOnly,
                 hideSport = filterHideSport,
+                cydonia = filterCydonia,
                 blacklistCatalog = filterBlacklistCatalog,
                 blacklistTerms = filterBlacklistTerms,
                 onUnreadOnlyChanged = { saveBooleanSetting(filterUnreadOnlyKey, it) },
                 onHideSportChanged = { saveBooleanSetting(filterHideSportKey, it) },
+                onCydoniaChanged = { saveBooleanSetting(filterCydoniaKey, it) },
                 onBlacklistCatalogChanged = { saveStringSetSetting(filterBlacklistCatalogKey, it) },
                 onBlacklistTermsChanged = { saveStringSetSetting(filterBlacklistTermsKey, it) },
                 onBack = { currentScreen = AppScreen.FEED }

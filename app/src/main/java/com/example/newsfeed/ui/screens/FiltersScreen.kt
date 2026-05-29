@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.newsfeed.data.defaultCydoniaNames
 import com.example.newsfeed.data.defaultBlacklistTerms
 import java.util.Locale
 
@@ -38,10 +39,12 @@ import java.util.Locale
 fun FiltersScreen(
     unreadOnly: Boolean,
     hideSport: Boolean,
+    cydonia: Boolean,
     blacklistCatalog: Set<String>,
     blacklistTerms: Set<String>,
     onUnreadOnlyChanged: (Boolean) -> Unit,
     onHideSportChanged: (Boolean) -> Unit,
+    onCydoniaChanged: (Boolean) -> Unit,
     onBlacklistCatalogChanged: (Set<String>) -> Unit,
     onBlacklistTermsChanged: (Set<String>) -> Unit,
     onBack: () -> Unit
@@ -97,6 +100,25 @@ fun FiltersScreen(
                 Text("Hide sport articles")
                 Switch(checked = hideSport, onCheckedChange = onHideSportChanged)
             }
+            Text(
+                text = "Sport is the new opium of the masses",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Cydonia filter")
+                Switch(checked = cydonia, onCheckedChange = onCydoniaChanged)
+            }
+            Text(
+                text = "How can we win when fools can be kings? Time has come to make things right and remove these fools from the news",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             Text("Blacklisted keywords", style = MaterialTheme.typography.titleMedium)
             allBlacklistTerms.forEach { term ->
