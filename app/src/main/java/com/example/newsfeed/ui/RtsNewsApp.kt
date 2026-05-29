@@ -14,11 +14,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -31,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -213,22 +218,47 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     var selectedArticle by remember { mutableStateOf<RtsArticle?>(null) }
     var currentScreen by remember { mutableStateOf(AppScreen.FEED) }
     var previousScreen by remember { mutableStateOf(AppScreen.FEED) }
+    var showFilteredArticles by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    fun visibleArticles(items: List<RtsArticle>): List<RtsArticle> {
-        return items.filter { article ->
+    fun hiddenReasonsForArticle(article: RtsArticle): List<String> {
+            val reasons = mutableListOf<String>()
             val filteredBySport = filterHideSport && (
                 article.link.contains("/sport/", ignoreCase = true) ||
                     article.category.contains("sport", ignoreCase = true)
                 )
-            val filteredByBlacklist = filterBlacklistTerms.any { term ->
+            if (filteredBySport) reasons += "sport"
+
+            val matchedBlacklistTerm = filterBlacklistTerms.firstOrNull { term ->
                 term.isNotBlank() && article.title.contains(term, ignoreCase = true)
             }
-            val filteredByUnread = filterUnreadOnly && (article.link in readLinks)
+            if (matchedBlacklistTerm != null) reasons += "blacklist:$matchedBlacklistTerm"
 
-            !filteredBySport && !filteredByBlacklist && !filteredByUnread
+            val filteredByUnread = filterUnreadOnly && (article.link in readLinks)
+            if (filteredByUnread) reasons += "already read"
+
+            return reasons
+    }
+
+    fun visibleArticles(items: List<RtsArticle>): List<RtsArticle> {
+        return if (showFilteredArticles) items else items.filter { article -> hiddenReasonsForArticle(article).isEmpty() }
+    }
+
+    fun hiddenArticleReasons(items: List<RtsArticle>): Map<String, String> {
+        if (!showFilteredArticles) return emptyMap()
+
+        val reasonsByKey = linkedMapOf<String, MutableSet<String>>()
+        items.forEach { article ->
+            val reasons = hiddenReasonsForArticle(article)
+            if (reasons.isNotEmpty()) {
+                val key = canonicalArticleKey(article.link)
+                val bucket = reasonsByKey.getOrPut(key) { linkedSetOf() }
+                bucket.addAll(reasons)
+            }
         }
+
+        return reasonsByKey.mapValues { (_, reasons) -> reasons.joinToString(separator = ", ") }
     }
 
     fun refresh(byPull: Boolean = false) {
@@ -506,6 +536,25 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                                     contentDescription = "Filters"
                                 )
                             }
+                            IconButton(onClick = { showFilteredArticles = !showFilteredArticles }) {
+                                Icon(
+                                    imageVector = if (showFilteredArticles) {
+                                        Icons.Filled.Visibility
+                                    } else {
+                                        Icons.Filled.VisibilityOff
+                                    },
+                                    contentDescription = if (showFilteredArticles) {
+                                        "Hide filtered articles"
+                                    } else {
+                                        "Show filtered articles"
+                                    },
+                                    tint = if (showFilteredArticles) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        LocalContentColor.current
+                                    }
+                                )
+                            }
                             IconButton(onClick = {
                                 previousScreen = AppScreen.FEED
                                 currentScreen = AppScreen.SETTINGS
@@ -523,8 +572,9 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                 Surface(modifier = Modifier.padding(innerPadding)) {
                     when (val state = uiState) {
                         is FeedUiState.Loading -> {
-                            val items = visibleArticles(state.items)
-                            if (items.isEmpty()) {
+                            val displayItems = visibleArticles(state.items)
+                            val hiddenReasons = hiddenArticleReasons(state.items)
+                            if (displayItems.isEmpty()) {
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
                                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -540,13 +590,14 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                                 Box(modifier = Modifier.fillMaxSize()) {
                                     NewsList(
                                         modifier = Modifier.fillMaxSize(),
-                                        items = items,
+                                        items = displayItems,
                                         isRefreshing = isRefreshing,
                                         isLoadingMore = isLoadingMore,
                                         canLoadMore = nextCursor != null,
                                         onRefresh = { refresh(byPull = true) },
                                         onLoadMore = { loadMoreIfNeeded() },
                                         readLinks = readLinks,
+                                        hiddenArticleReasons = hiddenReasons,
                                         showPreview = showPreview,
                                         listState = listState,
                                         onArticleClick = { article ->
@@ -582,17 +633,19 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                         }
 
                         is FeedUiState.Success -> {
-                            val filteredItems = visibleArticles(state.items)
+                            val displayItems = visibleArticles(state.items)
+                            val hiddenReasons = hiddenArticleReasons(state.items)
 
                             NewsList(
                                 modifier = Modifier.fillMaxSize(),
-                                items = filteredItems,
+                                items = displayItems,
                                 isRefreshing = isRefreshing,
                                 isLoadingMore = isLoadingMore,
                                 canLoadMore = nextCursor != null,
                                 onRefresh = { refresh(byPull = true) },
                                 onLoadMore = { loadMoreIfNeeded() },
                                 readLinks = readLinks,
+                                hiddenArticleReasons = hiddenReasons,
                                 showPreview = showPreview,
                                 listState = listState,
                                 onArticleClick = { article ->

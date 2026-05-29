@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -24,9 +27,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.newsfeed.model.RtsArticle
+import com.example.newsfeed.util.canonicalArticleKey
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
@@ -43,6 +48,7 @@ fun NewsList(
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     readLinks: Set<String>,
+    hiddenArticleReasons: Map<String, String>,
     showPreview: Boolean,
     listState: LazyListState,
     onArticleClick: (RtsArticle) -> Unit
@@ -78,6 +84,7 @@ fun NewsList(
         ) {
             items(items) { article ->
                 val hasBeenRead = article.link in readLinks
+                val hiddenReason = hiddenArticleReasons[canonicalArticleKey(article.link)]
                 val borderColor = if (hasBeenRead) {
                     MaterialTheme.colorScheme.tertiary
                 } else {
@@ -117,12 +124,38 @@ fun NewsList(
                             val meta = listOf(article.source, metaCategory, article.pubDateLabel)
                                 .filter { it.isNotBlank() }
                                 .joinToString(" • ")
-                            if (meta.isNotBlank()) {
-                                Text(
-                                    text = meta,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
+                            if (meta.isNotBlank() || hiddenReason != null) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    if (meta.isNotBlank()) {
+                                        Text(
+                                            text = meta,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    if (hiddenReason != null) {
+                                        Icon(
+                                            imageVector = Icons.Filled.VisibilityOff,
+                                            contentDescription = "Usually hidden article: $hiddenReason",
+                                            tint = MaterialTheme.colorScheme.error,
+                                        )
+                                        Text(
+                                            text = hiddenReason,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
                             }
                             if (showPreview && article.summary.isNotBlank()) {
                                 Text(
