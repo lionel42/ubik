@@ -41,7 +41,6 @@ import androidx.datastore.preferences.core.edit
 import com.example.newsfeed.data.dataStore
 import com.example.newsfeed.data.defaultBlacklistTerms
 import com.example.newsfeed.data.enabledSourcesKey
-import com.example.newsfeed.data.enabledSubFeedsKey
 import com.example.newsfeed.data.filterBlacklistCatalogKey
 import com.example.newsfeed.data.filterBlacklistTermsKey
 import com.example.newsfeed.data.filterHideSportKey
@@ -121,32 +120,16 @@ private fun mergeFeedItems(articles: Collection<RtsArticle>): List<RtsArticle> {
 
 private fun buildFeedLoadTargets(
     providers: List<ProviderDefinition>,
-    enabledSources: Set<String>,
-    enabledSubFeeds: Map<String, Set<String>>
+    enabledSources: Set<String>
 ): List<FeedLoadTarget> {
     return providers
         .filter { definition -> definition.id in enabledSources }
-        .flatMap { definition ->
-            val selectedSubFeedIds = enabledSubFeeds[definition.id]
-            if (!selectedSubFeedIds.isNullOrEmpty() && definition.subFeeds.isNotEmpty()) {
-                definition.subFeeds
-                    .filter { subFeed -> subFeed.id in selectedSubFeedIds }
-                    .map { subFeed ->
-                        FeedLoadTarget(
-                            key = "${definition.id}:${subFeed.id}",
-                            sourceLabel = subFeed.label,
-                            provider = SimpleRssProvider(subFeed.url)
-                        )
-                    }
-            } else {
-                listOf(
-                    FeedLoadTarget(
-                        key = definition.id,
-                        sourceLabel = definition.label,
-                        provider = SimpleRssProvider(definition.defaultFeedUrl)
-                    )
-                )
-            }
+        .map { definition ->
+            FeedLoadTarget(
+                key = definition.id,
+                sourceLabel = definition.label,
+                provider = SimpleRssProvider(definition.defaultFeedUrl)
+            )
         }
 }
 
@@ -212,30 +195,11 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
         }
         .collectAsState(initial = null)
     val enabledSources = enabledSourcesLoaded ?: allSourceIds
-
-    // null = DataStore hasn't emitted yet; non-null = real saved value
-    val enabledSubFeedsRawLoaded: Set<String>? by context.dataStore.data
-        .map { preferences -> preferences[enabledSubFeedsKey] ?: emptySet() }
-        .collectAsState(initial = null)
-    val enabledSubFeedsRaw = enabledSubFeedsRawLoaded ?: emptySet()
-
-    // Flat "providerId:subfeedId" strings → grouped map
-    val enabledSubFeeds: Map<String, Set<String>> = remember(enabledSubFeedsRaw) {
-        enabledSubFeedsRaw
-            .mapNotNull { entry ->
-                val parts = entry.split(":", limit = 2)
-                if (parts.size == 2) parts[0] to parts[1] else null
-            }
-            .groupBy({ it.first }, { it.second })
-            .mapValues { (_, ids) -> ids.toSet() }
-    }
-
     var selectedProviderForDetail by remember { mutableStateOf<String?>(null) }
 
-    val provider = remember(enabledSources, enabledSubFeeds) {
+    val provider = remember(enabledSources) {
         defaultProvider ?: AggregatedNewsProvider(
-            enabledSources = enabledSources,
-            enabledSubFeeds = enabledSubFeeds
+            enabledSources = enabledSources
         )
     }
 
@@ -293,8 +257,7 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                 } else {
                     val loadTargets = buildFeedLoadTargets(
                         providers = sourceDefinitions,
-                        enabledSources = enabledSources,
-                        enabledSubFeeds = enabledSubFeeds
+                        enabledSources = enabledSources
                     )
 
                     if (loadTargets.isEmpty()) {
@@ -404,12 +367,12 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
         }
     }
 
-    // On first composition (and whenever sources/subfeeds change), wait for DataStore to have
+    // On first composition (and whenever sources change), wait for DataStore to have
     // emitted the real saved preferences before loading, so startup matches manual reload.
     LaunchedEffect(defaultProvider ?: provider) {
-        if (defaultProvider == null && (enabledSourcesLoaded == null || enabledSubFeedsRawLoaded == null)) {
-            snapshotFlow { enabledSourcesLoaded to enabledSubFeedsRawLoaded }
-                .filter { loaded -> loaded.first != null && loaded.second != null }
+        if (defaultProvider == null && enabledSourcesLoaded == null) {
+            snapshotFlow { enabledSourcesLoaded }
+                .filter { loaded -> loaded != null }
                 .first()
         }
         refresh()
@@ -478,7 +441,6 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             SourcesScreen(
                 providers = sourceDefinitions,
                 enabledSources = enabledSources,
-                enabledSubFeeds = enabledSubFeeds,
                 onSourceEnabledChanged = { sourceId, isEnabled ->
                     val nextEnabled = if (isEnabled) enabledSources + sourceId else enabledSources - sourceId
                     saveStringSetSetting(enabledSourcesKey, nextEnabled)
@@ -495,24 +457,10 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             val providerId = selectedProviderForDetail
             val providerDef = sourceDefinitions.firstOrNull { it.id == providerId }
             if (providerDef == null) {
-                currentScreen = previousScreen
+                currentScreen = AppScreen.SOURCES
             } else {
                 ProviderDetailScreen(
                     provider = providerDef,
-                    enabledSubFeeds = enabledSubFeeds[providerDef.id] ?: emptySet(),
-                    onSubFeedToggled = { subfeedId, enabled ->
-                        scope.launch {
-                            context.dataStore.edit { preferences ->
-                                val current = preferences[enabledSubFeedsKey] ?: emptySet()
-                                val entry = "${providerDef.id}:$subfeedId"
-                                preferences[enabledSubFeedsKey] = if (enabled) {
-                                    current + entry
-                                } else {
-                                    current - entry
-                                }
-                            }
-                        }
-                    },
                     onBack = { currentScreen = AppScreen.SOURCES }
                 )
             }

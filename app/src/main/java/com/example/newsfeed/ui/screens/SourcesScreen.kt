@@ -35,7 +35,6 @@ import com.example.newsfeed.data.provider.ProviderDefinition
 fun SourcesScreen(
     providers: List<ProviderDefinition>,
     enabledSources: Set<String>,
-    enabledSubFeeds: Map<String, Set<String>>,
     onSourceEnabledChanged: (id: String, enabled: Boolean) -> Unit,
     onProviderClicked: (providerId: String) -> Unit,
     onBack: () -> Unit
@@ -56,7 +55,7 @@ fun SourcesScreen(
                 .verticalScroll(scrollState)
         ) {
             Text(
-                text = "Tap a provider to see details and configure sub-feeds.",
+                text = "Tap a provider to view details.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
@@ -67,7 +66,6 @@ fun SourcesScreen(
                 SourceRow(
                     provider = provider,
                     enabled = provider.id in enabledSources,
-                    enabledSubFeedCount = enabledSubFeeds[provider.id]?.size ?: 0,
                     onEnabledChanged = { onSourceEnabledChanged(provider.id, it) },
                     onClick = { onProviderClicked(provider.id) }
                 )
@@ -81,7 +79,6 @@ fun SourcesScreen(
 private fun SourceRow(
     provider: ProviderDefinition,
     enabled: Boolean,
-    enabledSubFeedCount: Int,
     onEnabledChanged: (Boolean) -> Unit,
     onClick: () -> Unit
 ) {
@@ -121,13 +118,6 @@ private fun SourceRow(
                         if (provider.region.isNotBlank()) {
                             MetadataChip(provider.region.uppercase())
                         }
-                        if (provider.subFeeds.isNotEmpty()) {
-                            val subLabel = if (enabledSubFeedCount > 0)
-                                "$enabledSubFeedCount / ${provider.subFeeds.size} sub-feeds"
-                            else
-                                "${provider.subFeeds.size} sub-feeds"
-                            MetadataChip(subLabel)
-                        }
                     }
                 }
             }
@@ -142,12 +132,12 @@ private fun SourceRow(
 
             Spacer(Modifier.width(8.dp))
 
-            // Right: drill-down chevron
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = "Open provider",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
         }
     }
 }

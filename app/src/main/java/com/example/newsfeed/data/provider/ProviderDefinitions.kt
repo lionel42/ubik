@@ -1,6 +1,6 @@
 package com.example.newsfeed.data.provider
 
-/** Broad thematic category for a provider or sub-feed. */
+/** Broad thematic category for a provider. */
 enum class FeedCategory(val label: String) {
     NEWS("News"),
     SPORT("Sport"),
@@ -12,21 +12,8 @@ enum class FeedCategory(val label: String) {
 }
 
 /**
- * A named sub-feed belonging to a provider (e.g. "SRF – Wirtschaft").
- */
-data class SubFeedDefinition(
-    val id: String,
-    val label: String,
-    val url: String,
-    val category: FeedCategory = FeedCategory.GENERAL
-)
-
-/**
  * Central list of available news providers.
  * Add a provider here to make it available in aggregation and source filters.
- *
- * [subFeeds] lists optional themed sub-feeds for providers that expose them.
- * [defaultFeedUrl] is used when no specific sub-feed is selected.
  */
 data class ProviderDefinition(
     val id: String,
@@ -36,9 +23,8 @@ data class ProviderDefinition(
     val language: String = "",
     /** Country or region code / display name, e.g. "CH", "FR". */
     val region: String = "",
-    /** Primary category of the provider's content. */
+    /** Primary category of the provider content. */
     val category: FeedCategory = FeedCategory.GENERAL,
-    val subFeeds: List<SubFeedDefinition> = emptyList(),
     val defaultFeedUrl: String
 )
 
@@ -78,31 +64,6 @@ object ProviderDefinitions {
             language = "de",
             region = "CH",
             category = FeedCategory.NEWS,
-            subFeeds = listOf(
-                // News
-                SubFeedDefinition("srf_news_latest",     "News – Das Neueste",      "https://www.srf.ch/news/bnf/rss/19032223",      FeedCategory.NEWS),
-                SubFeedDefinition("srf_news_schweiz",    "News – Schweiz",           "https://www.srf.ch/news/bnf/rss/1890",           FeedCategory.NEWS),
-                SubFeedDefinition("srf_news_intl",       "News – International",     "https://www.srf.ch/news/bnf/rss/1922",           FeedCategory.NEWS),
-                SubFeedDefinition("srf_news_wirtschaft", "News – Wirtschaft",        "https://www.srf.ch/news/bnf/rss/1926",           FeedCategory.ECONOMY),
-                // Sport
-                SubFeedDefinition("srf_sport_all",       "Sport – Alle",             "https://www.srf.ch/sport/bnf/rss/718",           FeedCategory.SPORT),
-                SubFeedDefinition("srf_sport_fussball",  "Sport – Fussball",         "https://www.srf.ch/sport/bnf/rss/2562",          FeedCategory.SPORT),
-                SubFeedDefinition("srf_sport_eishockey", "Sport – Eishockey",        "https://www.srf.ch/sport/bnf/rss/3418",          FeedCategory.SPORT),
-                SubFeedDefinition("srf_sport_tennis",    "Sport – Tennis",           "https://www.srf.ch/sport/bnf/rss/2814",          FeedCategory.SPORT),
-                SubFeedDefinition("srf_sport_ski",       "Sport – Ski Alpin",        "https://www.srf.ch/sport/bnf/rss/787950",        FeedCategory.SPORT),
-                SubFeedDefinition("srf_sport_motorsport","Sport – Motorsport",       "https://www.srf.ch/sport/bnf/rss/2958",          FeedCategory.SPORT),
-                // Kultur
-                SubFeedDefinition("srf_kultur_all",      "Kultur – Alle",            "https://www.srf.ch/kultur/bnf/rss/454",          FeedCategory.CULTURE),
-                SubFeedDefinition("srf_kultur_film",     "Kultur – Film & Serien",   "https://www.srf.ch/kultur/bnf/rss/8726",         FeedCategory.CULTURE),
-                SubFeedDefinition("srf_kultur_literatur","Kultur – Literatur",       "https://www.srf.ch/kultur/bnf/rss/8762",         FeedCategory.CULTURE),
-                SubFeedDefinition("srf_kultur_musik",    "Kultur – Musik",           "https://www.srf.ch/kultur/bnf/rss/8738",         FeedCategory.CULTURE),
-                SubFeedDefinition("srf_kultur_kunst",    "Kultur – Kunst",           "https://www.srf.ch/kultur/bnf/rss/8774",         FeedCategory.CULTURE),
-                // Wissen
-                SubFeedDefinition("srf_wissen_all",      "Wissen – Alle",            "https://www.srf.ch/bnf/rss/630",                 FeedCategory.SCIENCE),
-                SubFeedDefinition("srf_wissen_gesund",   "Wissen – Gesundheit",      "https://www.srf.ch/bnf/rss/19919909",            FeedCategory.SCIENCE),
-                SubFeedDefinition("srf_wissen_nachhal",  "Wissen – Nachhaltigkeit",  "https://www.srf.ch/bnf/rss/19920002",            FeedCategory.SCIENCE),
-                SubFeedDefinition("srf_wissen_technik",  "Wissen – Technik",         "https://www.srf.ch/bnf/rss/19920122",            FeedCategory.TECHNOLOGY)
-            ),
             defaultFeedUrl = "https://www.srf.ch/news/bnf/rss/19032223"
         ),
         ProviderDefinition(
@@ -121,17 +82,6 @@ object ProviderDefinitions {
             language = "en",
             region = "Global",
             category = FeedCategory.SCIENCE,
-            subFeeds = listOf(
-                SubFeedDefinition("sd_all", "All News", "https://www.sciencedaily.com/rss/all.xml", FeedCategory.NEWS),
-                SubFeedDefinition("sd_top", "Top News", "https://www.sciencedaily.com/rss/top.xml", FeedCategory.NEWS),
-                SubFeedDefinition("sd_top_science", "Top Science", "https://www.sciencedaily.com/rss/top/science.xml", FeedCategory.SCIENCE),
-                SubFeedDefinition("sd_top_health", "Top Health", "https://www.sciencedaily.com/rss/top/health.xml", FeedCategory.SCIENCE),
-                SubFeedDefinition("sd_top_technology", "Top Technology", "https://www.sciencedaily.com/rss/top/technology.xml", FeedCategory.TECHNOLOGY),
-                SubFeedDefinition("sd_top_environment", "Top Environment", "https://www.sciencedaily.com/rss/top/environment.xml", FeedCategory.SCIENCE),
-                SubFeedDefinition("sd_top_society", "Top Society", "https://www.sciencedaily.com/rss/top/society.xml", FeedCategory.GENERAL),
-                SubFeedDefinition("sd_strange_offbeat", "Strange & Offbeat", "https://www.sciencedaily.com/rss/strange_offbeat.xml", FeedCategory.GENERAL),
-                SubFeedDefinition("sd_most_popular", "Most Popular", "https://www.sciencedaily.com/rss/most_popular.xml", FeedCategory.GENERAL)
-            ),
             defaultFeedUrl = "https://www.sciencedaily.com/rss/top/science.xml"
         ),
         ProviderDefinition(

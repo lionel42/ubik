@@ -16,10 +16,5 @@ val showPreviewKey = booleanPreferencesKey("show_preview")
 val showAllArticleContentKey = booleanPreferencesKey("show_all_article_content")
 val hiddenArticleElementsKey = stringSetPreferencesKey("hidden_article_elements")
 val enabledSourcesKey = stringSetPreferencesKey("enabled_sources")
-/**
- * Stores enabled sub-feed selections as a flat set of "providerId:subfeedId" strings.
- * An absent/empty set means no sub-feed selection → use the provider's default feed.
- */
-val enabledSubFeedsKey = stringSetPreferencesKey("enabled_subfeeds")
 
 val defaultBlacklistTerms = setOf("trump", "eurovision")

@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -22,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,14 +30,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.newsfeed.data.provider.FeedCategory
 import com.example.newsfeed.data.provider.ProviderDefinition
-import com.example.newsfeed.data.provider.SubFeedDefinition
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProviderDetailScreen(
     provider: ProviderDefinition,
-    enabledSubFeeds: Set<String>,
-    onSubFeedToggled: (subfeedId: String, enabled: Boolean) -> Unit,
     onBack: () -> Unit
 ) {
     BackHandler(onBack = onBack)
@@ -71,7 +66,6 @@ fun ProviderDetailScreen(
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // Provider description
             if (provider.description.isNotBlank()) {
                 Text(
                     text = provider.description,
@@ -80,7 +74,6 @@ fun ProviderDetailScreen(
                 )
             }
 
-            // Metadata chips: category, language, region
             val chips = buildList {
                 if (provider.category != FeedCategory.GENERAL) add(provider.category.label)
                 if (provider.language.isNotBlank()) add(provider.language.uppercase())
@@ -100,101 +93,24 @@ fun ProviderDetailScreen(
             HorizontalDivider()
             Spacer(Modifier.height(4.dp))
 
-            if (provider.subFeeds.isEmpty()) {
-                Text(
-                    text = "This provider does not expose sub-feeds.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                Text(
-                    text = "Sub-feeds",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "Select the themed feeds you want to follow. When none are selected the default feed is used.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                // Quick-action row
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TextButton(
-                        onClick = {
-                            provider.subFeeds.forEach { sub ->
-                                if (sub.id !in enabledSubFeeds) {
-                                    onSubFeedToggled(sub.id, true)
-                                }
-                            }
-                        }
-                    ) {
-                        Text("Select all")
-                    }
-                    TextButton(
-                        onClick = {
-                            provider.subFeeds.forEach { sub ->
-                                if (sub.id in enabledSubFeeds) {
-                                    onSubFeedToggled(sub.id, false)
-                                }
-                            }
-                        }
-                    ) {
-                        Text("Clear all")
-                    }
-                }
-
-                HorizontalDivider()
-
-                provider.subFeeds.forEach { sub ->
-                    SubFeedRow(
-                        sub = sub,
-                        checked = sub.id in enabledSubFeeds,
-                        onCheckedChange = { checked -> onSubFeedToggled(sub.id, checked) }
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                }
-
-                Spacer(Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun SubFeedRow(
-    sub: SubFeedDefinition,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Surface(
-        onClick = { onCheckedChange(!checked) },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
-            ) {
-                Text(sub.label, style = MaterialTheme.typography.bodyMedium)
-                if (sub.category != FeedCategory.GENERAL) {
-                    DetailChip(sub.category.label)
-                }
-            }
-            Checkbox(
-                checked = checked,
-                onCheckedChange = onCheckedChange
+            Text(
+                text = "Feed URL",
+                style = MaterialTheme.typography.titleMedium
             )
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = provider.defaultFeedUrl,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
         }
     }
 }
