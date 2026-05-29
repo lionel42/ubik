@@ -1,6 +1,6 @@
 package com.example.newsfeed.data.provider
 
-import com.example.newsfeed.model.RtsArticle
+import com.example.newsfeed.model.NewsArticle
 import com.example.newsfeed.util.extractImageUrl
 import com.example.newsfeed.util.extractSummary
 import com.example.newsfeed.util.formatEpochToDisplay
@@ -22,13 +22,13 @@ private const val RTS_FEED_URL = "https://www.rts.ch/info/toute-info/?format=rss
 class RtsNewsProvider : NewsProvider {
     override val initialCursor: String? = "/info/page/1"
 
-    override suspend fun fetchLatest(): List<RtsArticle> = withContext(Dispatchers.IO) {
+    override suspend fun fetchLatest(): List<NewsArticle> = withContext(Dispatchers.IO) {
         val connection = URL(RTS_FEED_URL).openConnection() as HttpURLConnection
         connection.connectTimeout = 15000
         connection.readTimeout = 15000
         connection.requestMethod = "GET"
         connection.setRequestProperty("Accept", "application/rss+xml, application/xml;q=0.9, */*;q=0.8")
-        connection.setRequestProperty("User-Agent", "NewsFeedAndroid/1.0")
+        connection.setRequestProperty("User-Agent", "UbikAndroid/1.0")
 
         connection.inputStream.use { input ->
             parseRss(input).sortedByDescending { article -> article.publishedAtEpochMs }
@@ -46,14 +46,14 @@ class RtsNewsProvider : NewsProvider {
         connection.connectTimeout = 15000
         connection.readTimeout = 15000
         connection.requestMethod = "GET"
-        connection.setRequestProperty("User-Agent", "NewsFeedAndroid/1.0")
+        connection.setRequestProperty("User-Agent", "UbikAndroid/1.0")
         connection.setRequestProperty("X-Requested-With", "XMLHttpRequest")
 
         val html = connection.inputStream.bufferedReader().use { it.readText() }
         val doc = Jsoup.parse(html)
 
         val cards = doc.select(".grid-item .rts-card")
-        val parsedItems = mutableListOf<RtsArticle>()
+        val parsedItems = mutableListOf<NewsArticle>()
 
         cards.forEach { card ->
             val href = when {
@@ -76,7 +76,7 @@ class RtsNewsProvider : NewsProvider {
             val parsedEpoch = parseRtsRelativeTimeToEpoch(timeLabel)
             val pubDateLabel = if (parsedEpoch > 0L) formatEpochToDisplay(parsedEpoch) else timeLabel
 
-            parsedItems += RtsArticle(
+            parsedItems += NewsArticle(
                 title = title,
                 link = absoluteLink,
                 category = category,
@@ -96,8 +96,8 @@ class RtsNewsProvider : NewsProvider {
         )
     }
 
-    private fun parseRss(input: InputStream): List<RtsArticle> {
-        val items = mutableListOf<RtsArticle>()
+    private fun parseRss(input: InputStream): List<NewsArticle> {
+        val items = mutableListOf<NewsArticle>()
         val parserFactory = XmlPullParserFactory.newInstance()
         val parser = parserFactory.newPullParser().apply {
             setInput(input, null)
@@ -135,7 +135,7 @@ class RtsNewsProvider : NewsProvider {
                 XmlPullParser.END_TAG -> {
                     if (parser.name.equals("item", ignoreCase = true)) {
                         inItem = false
-                        items += RtsArticle(
+                        items += NewsArticle(
                             title = title,
                             link = link,
                             category = categoryFromUrl(link, category),

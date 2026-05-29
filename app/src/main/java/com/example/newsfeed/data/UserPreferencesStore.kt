@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.booleanPreferencesKey
 
-val Context.dataStore by preferencesDataStore(name = "newsfeed_prefs")
+val Context.dataStore by preferencesDataStore(name = "ubik_prefs")
 
 val readLinksKey = stringSetPreferencesKey("read_links")
 val filterUnreadOnlyKey = booleanPreferencesKey("filter_unread_only")
@@ -18,5 +18,4 @@ val showAllArticleContentKey = booleanPreferencesKey("show_all_article_content")
 val hiddenArticleElementsKey = stringSetPreferencesKey("hidden_article_elements")
 val enabledSourcesKey = stringSetPreferencesKey("enabled_sources")
 
-val defaultBlacklistTerms = setOf("trump", "eurovision")
 val defaultCydoniaNames = setOf("trump", "netanyau", "netanyahu", "putin")

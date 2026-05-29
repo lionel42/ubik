@@ -1,6 +1,6 @@
 package com.example.newsfeed.data.provider
 
-import com.example.newsfeed.model.RtsArticle
+import com.example.newsfeed.model.NewsArticle
 import com.example.newsfeed.util.extractImageUrl
 import com.example.newsfeed.util.extractSummary
 import com.example.newsfeed.util.formatPubDate
@@ -27,13 +27,13 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
      */
     open fun categoryFromItem(title: String, link: String, xmlCategory: String): String = xmlCategory
 
-    override suspend fun fetchLatest(): List<RtsArticle> = withContext(Dispatchers.IO) {
+    override suspend fun fetchLatest(): List<NewsArticle> = withContext(Dispatchers.IO) {
         val connection = URL(feedUrl).openConnection() as HttpURLConnection
         connection.connectTimeout = 15000
         connection.readTimeout = 15000
         connection.requestMethod = "GET"
         connection.setRequestProperty("Accept", "application/rss+xml, application/xml;q=0.9, */*;q=0.8")
-        connection.setRequestProperty("User-Agent", "NewsFeedAndroid/1.0")
+        connection.setRequestProperty("User-Agent", "UbikAndroid/1.0")
 
         connection.inputStream.use { input ->
             parseRss(input).sortedByDescending { article -> article.publishedAtEpochMs }
@@ -45,8 +45,8 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
         return PagedResult(items = emptyList(), nextCursor = null)
     }
 
-    private fun parseRss(input: InputStream): List<RtsArticle> {
-        val items = mutableListOf<RtsArticle>()
+    private fun parseRss(input: InputStream): List<NewsArticle> {
+        val items = mutableListOf<NewsArticle>()
         val parserFactory = XmlPullParserFactory.newInstance()
         val parser = parserFactory.newPullParser().apply {
             setInput(input, null)
@@ -88,7 +88,7 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
                     if (parser.name.equals("item", ignoreCase = true)) {
                         inItem = false
                         if (title.isNotBlank() && link.isNotBlank()) {
-                            items += RtsArticle(
+                            items += NewsArticle(
                                 title = title,
                                 link = link,
                                 category = categoryFromItem(title, link, category),

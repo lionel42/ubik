@@ -30,7 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.newsfeed.model.RtsArticle
+import com.example.newsfeed.model.NewsArticle
 import com.example.newsfeed.util.canonicalArticleKey
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -41,7 +41,7 @@ private const val META_CATEGORY_MAX_LENGTH = 32
 @OptIn(ExperimentalMaterial3Api::class)
 fun NewsList(
     modifier: Modifier = Modifier,
-    items: List<RtsArticle>,
+    items: List<NewsArticle>,
     isRefreshing: Boolean,
     isLoadingMore: Boolean,
     canLoadMore: Boolean,
@@ -51,7 +51,7 @@ fun NewsList(
     hiddenArticleReasons: Map<String, String>,
     showPreview: Boolean,
     listState: LazyListState,
-    onArticleClick: (RtsArticle) -> Unit
+    onArticleClick: (NewsArticle) -> Unit
 ) {
     LaunchedEffect(listState, items.size, canLoadMore, isLoadingMore) {
         if (!canLoadMore) return@LaunchedEffect

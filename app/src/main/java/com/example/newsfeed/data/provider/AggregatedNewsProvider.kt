@@ -1,6 +1,6 @@
 package com.example.newsfeed.data.provider
 
-import com.example.newsfeed.model.RtsArticle
+import com.example.newsfeed.model.NewsArticle
 import com.example.newsfeed.util.canonicalArticleKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -19,7 +19,7 @@ class AggregatedNewsProvider(
 ) : NewsProvider {
     override val initialCursor: String? = null
 
-    override suspend fun fetchLatest(): List<RtsArticle> = withContext(Dispatchers.IO) {
+    override suspend fun fetchLatest(): List<NewsArticle> = withContext(Dispatchers.IO) {
         val providerInstances: List<Pair<String, NewsProvider>> = providers
             .filter { def -> def.id in enabledSources }
             .map { def -> def.id to SimpleRssProvider(def.defaultFeedUrl) }
@@ -36,7 +36,7 @@ class AggregatedNewsProvider(
 
         // Deduplicate by canonical link
         val seen = mutableSetOf<String>()
-        val deduped = mutableListOf<RtsArticle>()
+        val deduped = mutableListOf<NewsArticle>()
 
         for (article in allResults) {
             val key = canonicalArticleKey(article.link)

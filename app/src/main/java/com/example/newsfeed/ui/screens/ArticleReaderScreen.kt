@@ -22,7 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.newsfeed.model.RtsArticle
+import com.example.newsfeed.model.NewsArticle
 import com.example.newsfeed.ui.components.UbikLogo
 
 enum class ArticleHideElement(
@@ -337,7 +337,7 @@ private class ArticleFocusWebViewClient(
 @OptIn(ExperimentalMaterial3Api::class)
 fun ArticleReaderScreen(
     webView: WebView,
-    article: RtsArticle,
+    article: NewsArticle,
     hiddenElements: Set<ArticleHideElement>,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit

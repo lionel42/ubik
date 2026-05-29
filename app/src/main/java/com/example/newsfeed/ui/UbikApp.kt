@@ -60,7 +60,7 @@ import com.example.newsfeed.data.readLinksKey
 import com.example.newsfeed.data.hiddenArticleElementsKey
 import com.example.newsfeed.data.showAllArticleContentKey
 import com.example.newsfeed.data.showPreviewKey
-import com.example.newsfeed.model.RtsArticle
+import com.example.newsfeed.model.NewsArticle
 import com.example.newsfeed.ui.components.NewsList
 import com.example.newsfeed.ui.components.UbikLogo
 import com.example.newsfeed.ui.screens.ArticleHideElement
@@ -99,8 +99,8 @@ private enum class AppScreen {
 }
 
 private sealed interface FeedUiState {
-    data class Loading(val items: List<RtsArticle> = emptyList()) : FeedUiState
-    data class Success(val items: List<RtsArticle>) : FeedUiState
+    data class Loading(val items: List<NewsArticle> = emptyList()) : FeedUiState
+    data class Success(val items: List<NewsArticle>) : FeedUiState
     data class Error(val message: String) : FeedUiState
 }
 
@@ -110,9 +110,9 @@ private data class FeedLoadTarget(
     val provider: NewsProvider
 )
 
-private fun mergeFeedItems(articles: Collection<RtsArticle>): List<RtsArticle> {
+private fun mergeFeedItems(articles: Collection<NewsArticle>): List<NewsArticle> {
     val seenKeys = mutableSetOf<String>()
-    val deduped = mutableListOf<RtsArticle>()
+    val deduped = mutableListOf<NewsArticle>()
 
     for (article in articles.sortedByDescending { it.publishedAtEpochMs }) {
         val articleKey = canonicalArticleKey(article.link)
@@ -141,7 +141,7 @@ private fun buildFeedLoadTargets(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
+fun UbikApp(defaultProvider: NewsProvider? = null) {
     val context = LocalContext.current
     val sharedReaderWebView = remember(context) {
         WebView(context).apply {
@@ -219,14 +219,14 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
     var lastRefreshTimeMs by remember { mutableStateOf(0L) }
     var refreshJob: Job? by remember { mutableStateOf(null) }
     var nextCursor by remember { mutableStateOf(provider.initialCursor) }
-    var selectedArticle by remember { mutableStateOf<RtsArticle?>(null) }
+    var selectedArticle by remember { mutableStateOf<NewsArticle?>(null) }
     var currentScreen by remember { mutableStateOf(AppScreen.FEED) }
     var previousScreen by remember { mutableStateOf(AppScreen.FEED) }
     var showFilteredArticles by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    fun hiddenReasonsForArticle(article: RtsArticle): List<String> {
+    fun hiddenReasonsForArticle(article: NewsArticle): List<String> {
             val reasons = mutableListOf<String>()
             val articleText = listOf(article.title, article.summary, article.category)
                 .joinToString(" ")
@@ -257,11 +257,11 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
             return reasons
     }
 
-    fun visibleArticles(items: List<RtsArticle>): List<RtsArticle> {
+    fun visibleArticles(items: List<NewsArticle>): List<NewsArticle> {
         return if (showFilteredArticles) items else items.filter { article -> hiddenReasonsForArticle(article).isEmpty() }
     }
 
-    fun hiddenArticleReasons(items: List<RtsArticle>): Map<String, String> {
+    fun hiddenArticleReasons(items: List<NewsArticle>): Map<String, String> {
         if (!showFilteredArticles) return emptyMap()
 
         val reasonsByKey = linkedMapOf<String, MutableSet<String>>()
@@ -311,7 +311,7 @@ fun RtsNewsApp(defaultProvider: NewsProvider? = null) {
                         nextCursor = null
                         hasLoadedOnce = true
                     } else {
-                        val loadedByTarget = linkedMapOf<String, List<RtsArticle>>()
+                        val loadedByTarget = linkedMapOf<String, List<NewsArticle>>()
                         var failedTargets = 0
                         val mutex = Mutex()
 

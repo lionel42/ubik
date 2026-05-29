@@ -1,6 +1,6 @@
 package com.example.newsfeed.model
 
-data class RtsArticle(
+data class NewsArticle(
     val title: String,
     val link: String,
     val category: String,
