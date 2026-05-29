@@ -48,7 +48,7 @@ object ProviderDefinitions {
     val all = listOf(
         ProviderDefinition(
             id = "RTS",
-            label = "RTS (Swiss French)",
+            label = "RTS",
             description = "Radio Télévision Suisse – Swiss public broadcaster in French.",
             language = "fr",
             region = "CH",
@@ -57,7 +57,7 @@ object ProviderDefinitions {
         ),
         ProviderDefinition(
             id = "Blast",
-            label = "Blast (French)",
+            label = "Blast",
             description = "Blast – Le souffle de l'info. Independent French investigative news.",
             language = "fr",
             region = "FR",
@@ -75,7 +75,7 @@ object ProviderDefinitions {
         ),
         ProviderDefinition(
             id = "SRF",
-            label = "SRF (Swiss German)",
+            label = "SRF",
             description = "Schweizer Radio und Fernsehen – Swiss public broadcaster in German.",
             language = "de",
             region = "CH",
@@ -110,7 +110,7 @@ object ProviderDefinitions {
         ),
         ProviderDefinition(
             id = "Empa",
-            label = "Empa (Workplace)",
+            label = "Empa",
             description = "Empa – Swiss Federal Laboratories for Materials Science and Technology.",
             language = "en",
             region = "CH",
