@@ -3,10 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RES_DIR="$ROOT_DIR/app/src/main/res"
-ORIGINAL_DIR="$RES_DIR/original"
+DESIGN_ASSETS_DIR="$ROOT_DIR/design-assets"
 
-MENU_SVG_DEFAULT="$ORIGINAL_DIR/ubik_logo.svg"
-ICON_SVG_DEFAULT="$ORIGINAL_DIR/ubik_image.svg"
+MENU_SVG_DEFAULT="$DESIGN_ASSETS_DIR/ubik_logo.svg"
+ICON_SVG_DEFAULT="$DESIGN_ASSETS_DIR/ubik_image.svg"
 
 MENU_SVG="$MENU_SVG_DEFAULT"
 ICON_SVG="$ICON_SVG_DEFAULT"
