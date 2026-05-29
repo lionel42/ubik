@@ -26,8 +26,7 @@ data class SubFeedDefinition(
  * Add a provider here to make it available in aggregation and source filters.
  *
  * [subFeeds] lists optional themed sub-feeds for providers that expose them.
- * [subFeedFactory] creates a provider instance for a given sub-feed URL; required when
- * [subFeeds] is non-empty.
+ * [defaultFeedUrl] is used when no specific sub-feed is selected.
  */
 data class ProviderDefinition(
     val id: String,
@@ -40,8 +39,7 @@ data class ProviderDefinition(
     /** Primary category of the provider's content. */
     val category: FeedCategory = FeedCategory.GENERAL,
     val subFeeds: List<SubFeedDefinition> = emptyList(),
-    val factory: () -> NewsProvider,
-    val subFeedFactory: ((url: String) -> NewsProvider)? = null
+    val defaultFeedUrl: String
 )
 
 object ProviderDefinitions {
@@ -53,7 +51,7 @@ object ProviderDefinitions {
             language = "fr",
             region = "CH",
             category = FeedCategory.NEWS,
-            factory = { RtsNewsProvider() }
+            defaultFeedUrl = "https://www.rts.ch/info/toute-info/?format=rss/news"
         ),
         ProviderDefinition(
             id = "Blast",
@@ -62,7 +60,7 @@ object ProviderDefinitions {
             language = "fr",
             region = "FR",
             category = FeedCategory.NEWS,
-            factory = { BlastNewsProvider() }
+            defaultFeedUrl = "https://api.blast-info.fr/rss.xml"
         ),
         ProviderDefinition(
             id = "BrokenTest",
@@ -71,7 +69,7 @@ object ProviderDefinitions {
             language = "en",
             region = "Test",
             category = FeedCategory.GENERAL,
-            factory = { SimpleRssProvider("https://invalid-feed.example.invalid/rss.xml") }
+            defaultFeedUrl = "https://invalid-feed.example.invalid/rss.xml"
         ),
         ProviderDefinition(
             id = "SRF",
@@ -105,8 +103,7 @@ object ProviderDefinitions {
                 SubFeedDefinition("srf_wissen_nachhal",  "Wissen – Nachhaltigkeit",  "https://www.srf.ch/bnf/rss/19920002",            FeedCategory.SCIENCE),
                 SubFeedDefinition("srf_wissen_technik",  "Wissen – Technik",         "https://www.srf.ch/bnf/rss/19920122",            FeedCategory.TECHNOLOGY)
             ),
-            factory = { SrfNewsProvider() },
-            subFeedFactory = { url -> SrfNewsProvider(url) }
+            defaultFeedUrl = "https://www.srf.ch/news/bnf/rss/19032223"
         ),
         ProviderDefinition(
             id = "Empa",
@@ -115,7 +112,7 @@ object ProviderDefinitions {
             language = "en",
             region = "CH",
             category = FeedCategory.SCIENCE,
-            factory = { EmpaNewsProvider() }
+            defaultFeedUrl = "https://news.google.com/rss/search?q=site:empa.ch/web/s604&hl=en-CH&gl=CH&ceid=CH:en"
         ),
         ProviderDefinition(
             id = "ScienceDaily",
@@ -135,8 +132,7 @@ object ProviderDefinitions {
                 SubFeedDefinition("sd_strange_offbeat", "Strange & Offbeat", "https://www.sciencedaily.com/rss/strange_offbeat.xml", FeedCategory.GENERAL),
                 SubFeedDefinition("sd_most_popular", "Most Popular", "https://www.sciencedaily.com/rss/most_popular.xml", FeedCategory.GENERAL)
             ),
-            factory = { ScienceDailyNewsProvider() },
-            subFeedFactory = { url -> ScienceDailyNewsProvider(url) }
+            defaultFeedUrl = "https://www.sciencedaily.com/rss/top/science.xml"
         ),
         ProviderDefinition(
             id = "PlantBasedNews",
@@ -145,7 +141,7 @@ object ProviderDefinitions {
             language = "en",
             region = "Global",
             category = FeedCategory.NEWS,
-            factory = { PlantBasedNewsProvider() }
+            defaultFeedUrl = "https://plantbasednews.org/feed/"
         )
     )
 

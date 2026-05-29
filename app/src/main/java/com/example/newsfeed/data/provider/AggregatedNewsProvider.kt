@@ -29,14 +29,13 @@ class AggregatedNewsProvider(
             .filter { def -> def.id in enabledSources }
             .flatMap { def ->
                 val selectedSubFeedIds = enabledSubFeeds[def.id]
-                val factory = def.subFeedFactory
-                if (!selectedSubFeedIds.isNullOrEmpty() && factory != null) {
+                if (!selectedSubFeedIds.isNullOrEmpty() && def.subFeeds.isNotEmpty()) {
                     // Instantiate one provider per selected sub-feed
                     def.subFeeds
                         .filter { sub -> sub.id in selectedSubFeedIds }
-                        .map { sub -> def.id to factory(sub.url) }
+                        .map { sub -> def.id to SimpleRssProvider(sub.url) }
                 } else {
-                    listOf(def.id to def.factory())
+                    listOf(def.id to SimpleRssProvider(def.defaultFeedUrl))
                 }
             }
 

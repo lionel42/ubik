@@ -50,6 +50,7 @@ import com.example.newsfeed.data.provider.ProviderDefinition
 import com.example.newsfeed.data.provider.AggregatedNewsProvider
 import com.example.newsfeed.data.provider.NewsProvider
 import com.example.newsfeed.data.provider.ProviderDefinitions
+import com.example.newsfeed.data.provider.SimpleRssProvider
 import com.example.newsfeed.data.readLinksKey
 import com.example.newsfeed.data.hiddenArticleElementsKey
 import com.example.newsfeed.data.showAllArticleContentKey
@@ -127,15 +128,14 @@ private fun buildFeedLoadTargets(
         .filter { definition -> definition.id in enabledSources }
         .flatMap { definition ->
             val selectedSubFeedIds = enabledSubFeeds[definition.id]
-            val subFeedFactory = definition.subFeedFactory
-            if (!selectedSubFeedIds.isNullOrEmpty() && subFeedFactory != null) {
+            if (!selectedSubFeedIds.isNullOrEmpty() && definition.subFeeds.isNotEmpty()) {
                 definition.subFeeds
                     .filter { subFeed -> subFeed.id in selectedSubFeedIds }
                     .map { subFeed ->
                         FeedLoadTarget(
                             key = "${definition.id}:${subFeed.id}",
                             sourceLabel = subFeed.label,
-                            provider = subFeedFactory(subFeed.url)
+                            provider = SimpleRssProvider(subFeed.url)
                         )
                     }
             } else {
@@ -143,7 +143,7 @@ private fun buildFeedLoadTargets(
                     FeedLoadTarget(
                         key = definition.id,
                         sourceLabel = definition.label,
-                        provider = definition.factory()
+                        provider = SimpleRssProvider(definition.defaultFeedUrl)
                     )
                 )
             }
