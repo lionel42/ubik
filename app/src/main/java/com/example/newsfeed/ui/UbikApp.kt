@@ -54,7 +54,7 @@ import com.example.newsfeed.data.filterUnreadOnlyKey
 import com.example.newsfeed.data.provider.ProviderDefinition
 import com.example.newsfeed.data.provider.AggregatedNewsProvider
 import com.example.newsfeed.data.provider.NewsProvider
-import com.example.newsfeed.data.provider.ProviderDefinitions
+import com.example.newsfeed.data.provider.ProviderConfigLoader
 import com.example.newsfeed.data.provider.SimpleRssProvider
 import com.example.newsfeed.data.readLinksKey
 import com.example.newsfeed.data.hiddenArticleElementsKey
@@ -134,7 +134,7 @@ private fun buildFeedLoadTargets(
             FeedLoadTarget(
                 key = definition.id,
                 sourceLabel = definition.label,
-                provider = SimpleRssProvider(definition.defaultFeedUrl)
+                provider = SimpleRssProvider(definition.feedUrl)
             )
         }
 }
@@ -192,8 +192,8 @@ fun UbikApp(defaultProvider: NewsProvider? = null) {
         }
         .collectAsState(initial = ArticleHideElement.defaultHidden)
 
-    val sourceDefinitions = remember { ProviderDefinitions.all }
-    val allSourceIds = remember { ProviderDefinitions.allIds }
+    val sourceDefinitions = remember(context) { ProviderConfigLoader.load(context) }
+    val allSourceIds = remember(sourceDefinitions) { sourceDefinitions.map { definition -> definition.id }.toSet() }
     // null = DataStore hasn't emitted yet; non-null = real saved value
     val enabledSourcesLoaded: Set<String>? by context.dataStore.data
         .map { preferences ->
@@ -206,8 +206,9 @@ fun UbikApp(defaultProvider: NewsProvider? = null) {
     val enabledSources = enabledSourcesLoaded ?: allSourceIds
     var selectedProviderForDetail by remember { mutableStateOf<String?>(null) }
 
-    val provider = remember(enabledSources) {
+    val provider = remember(sourceDefinitions, enabledSources) {
         defaultProvider ?: AggregatedNewsProvider(
+            providers = sourceDefinitions,
             enabledSources = enabledSources
         )
     }

@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.webkit)
     implementation(libs.coil.compose)
     implementation(libs.jsoup)
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

@@ -30,15 +30,17 @@ Run:
 
 The script generates files required for the app.
 
-## News Providers
+## Provider configuration
 
-| Source | Language | Notes |
-|--------|----------|-------|
-| [RTS](https://www.rts.ch) | French (Swiss) | Swiss public broadcaster |
-| [Blast](https://www.blast-info.fr) | French | Independent investigative media |
-| [SRF](https://www.srf.ch) | German (Swiss) | Swiss public broadcaster |
-| [Empa](https://www.empa.ch) | English | Swiss materials science research news |
-| [Plant Based News](https://plantbasednews.org) | English | Plant-based living and sustainability news |
+Provider are defined in a JSON file.
+
+- Bundled default file: `app/src/main/assets/providers.json`
+- Optional runtime override file (device): `files/providers_override.json`
+
+Loading precedence:
+
+1. Runtime override file (if present and valid)
+2. Bundled asset file
 
 ## License
 

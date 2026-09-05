@@ -13,16 +13,15 @@ import kotlinx.coroutines.withContext
  * Deduplicates by canonical link and sorts by publication date.
  */
 class AggregatedNewsProvider(
-    private val providers: List<ProviderDefinition> =
-        ProviderDefinitions.all,
-    private val enabledSources: Set<String> = ProviderDefinitions.allIds
+    private val providers: List<ProviderDefinition>,
+    private val enabledSources: Set<String>
 ) : NewsProvider {
     override val initialCursor: String? = null
 
     override suspend fun fetchLatest(): List<NewsArticle> = withContext(Dispatchers.IO) {
         val providerInstances: List<Pair<String, NewsProvider>> = providers
             .filter { def -> def.id in enabledSources }
-            .map { def -> def.id to SimpleRssProvider(def.defaultFeedUrl) }
+            .map { def -> def.id to SimpleRssProvider(def.feedUrl) }
 
         val tasks = providerInstances.map { (name, provider) ->
             async {

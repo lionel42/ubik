@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "providers": [
+    {
+      "id": "RTS",
+      "label": "RTS",
+      "description": "Radio Television Suisse - Swiss public broadcaster in French.",
+      "language": "fr",
+      "region": "CH",
+      "category": "NEWS",
+      "feedUrl": "https://www.rts.ch/info/toute-info/?format=rss/news"
+    },
+    {
+      "id": "Blast",
+      "label": "Blast",
+      "description": "Blast - Le souffle de l'info. Independent French investigative news.",
+      "language": "fr",
+      "region": "FR",
+      "category": "NEWS",
+      "feedUrl": "https://api.blast-info.fr/rss.xml"
+    },
+    {
+      "id": "SRF",
+      "label": "SRF",
+      "description": "Schweizer Radio und Fernsehen - Swiss public broadcaster in German.",
+      "language": "de",
+      "region": "CH",
+      "category": "NEWS",
+      "feedUrl": "https://www.srf.ch/news/bnf/rss/19032223"
+    },
+    {
+      "id": "Empa",
+      "label": "Empa",
+      "description": "Empa - Swiss Federal Laboratories for Materials Science and Technology.",
+      "language": "en",
+      "region": "CH",
+      "category": "SCIENCE",
+      "feedUrl": "https://news.google.com/rss/search?q=site:empa.ch/web/s604&hl=en-CH&gl=CH&ceid=CH:en"
+    },
+    {
+      "id": "ScienceDaily",
+      "label": "ScienceDaily",
+      "description": "ScienceDaily top science headlines.",
+      "language": "en",
+      "region": "Global",
+      "category": "SCIENCE",
+      "feedUrl": "https://www.sciencedaily.com/rss/top/science.xml"
+    },
+    {
+      "id": "PlantBasedNews",
+      "label": "Plant Based News",
+      "description": "Plant Based News - plant-based living and sustainability news.",
+      "language": "en",
+      "region": "Global",
+      "category": "NEWS",
+      "feedUrl": "https://plantbasednews.org/feed/"
+    },
+    {
+      "id": "BBCNews",
+      "label": "BBC News",
+      "description": "BBC News international headlines.",
+      "language": "en",
+      "region": "Global",
+      "category": "NEWS",
+      "feedUrl": "https://feeds.bbci.co.uk/news/rss.xml?edition=int"
+    },
+    {
+      "id": "BBCWorld",
+      "label": "BBC World",
+      "description": "BBC world news.",
+      "language": "en",
+      "region": "Global",
+      "category": "NEWS",
+      "feedUrl": "https://feeds.bbci.co.uk/news/world/rss.xml?edition=int"
+    },
+    {
+      "id": "BBCBusiness",
+      "label": "BBC Business",
+      "description": "BBC business news.",
+      "language": "en",
+      "region": "Global",
+      "category": "ECONOMY",
+      "feedUrl": "https://feeds.bbci.co.uk/news/business/rss.xml?edition=int"
+    },
+    {
+      "id": "BBCTechnology",
+      "label": "BBC Technology",
+      "description": "BBC technology news.",
+      "language": "en",
+      "region": "Global",
+      "category": "TECHNOLOGY",
+      "feedUrl": "https://feeds.bbci.co.uk/news/technology/rss.xml?edition=int"
+    },
+    {
+      "id": "BBCScience",
+      "label": "BBC Science & Environment",
+      "description": "BBC science and environment news.",
+      "language": "en",
+      "region": "Global",
+      "category": "SCIENCE",
+      "feedUrl": "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml?edition=int"
+    }
+  ]
+}

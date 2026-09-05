@@ -12,8 +12,7 @@ enum class FeedCategory(val label: String) {
 }
 
 /**
- * Central list of available news providers.
- * Add a provider here to make it available in aggregation and source filters.
+ * Provider model used in aggregation and source filters.
  */
 data class ProviderDefinition(
     val id: String,
@@ -25,120 +24,5 @@ data class ProviderDefinition(
     val region: String = "",
     /** Primary category of the provider content. */
     val category: FeedCategory = FeedCategory.GENERAL,
-    val defaultFeedUrl: String
+    val feedUrl: String
 )
-
-object ProviderDefinitions {
-    val all = listOf(
-        ProviderDefinition(
-            id = "RTS",
-            label = "RTS",
-            description = "Radio Télévision Suisse – Swiss public broadcaster in French.",
-            language = "fr",
-            region = "CH",
-            category = FeedCategory.NEWS,
-            defaultFeedUrl = "https://www.rts.ch/info/toute-info/?format=rss/news"
-        ),
-        ProviderDefinition(
-            id = "Blast",
-            label = "Blast",
-            description = "Blast – Le souffle de l'info. Independent French investigative news.",
-            language = "fr",
-            region = "FR",
-            category = FeedCategory.NEWS,
-            defaultFeedUrl = "https://api.blast-info.fr/rss.xml"
-        ),
-//        ProviderDefinition(
-//            id = "BrokenTest",
-//            label = "Broken RSS (Test)",
-//            description = "Deliberately broken RSS feed for testing error handling.",
-//            language = "en",
-//            region = "Test",
-//            category = FeedCategory.GENERAL,
-//            defaultFeedUrl = "https://invalid-feed.example.invalid/rss.xml"
-//        ),
-        ProviderDefinition(
-            id = "SRF",
-            label = "SRF",
-            description = "Schweizer Radio und Fernsehen – Swiss public broadcaster in German.",
-            language = "de",
-            region = "CH",
-            category = FeedCategory.NEWS,
-            defaultFeedUrl = "https://www.srf.ch/news/bnf/rss/19032223"
-        ),
-        ProviderDefinition(
-            id = "Empa",
-            label = "Empa",
-            description = "Empa – Swiss Federal Laboratories for Materials Science and Technology.",
-            language = "en",
-            region = "CH",
-            category = FeedCategory.SCIENCE,
-            defaultFeedUrl = "https://news.google.com/rss/search?q=site:empa.ch/web/s604&hl=en-CH&gl=CH&ceid=CH:en"
-        ),
-        ProviderDefinition(
-            id = "ScienceDaily",
-            label = "ScienceDaily",
-            description = "ScienceDaily top science headlines.",
-            language = "en",
-            region = "Global",
-            category = FeedCategory.SCIENCE,
-            defaultFeedUrl = "https://www.sciencedaily.com/rss/top/science.xml"
-        ),
-        ProviderDefinition(
-            id = "PlantBasedNews",
-            label = "Plant Based News",
-            description = "Plant Based News – plant-based living and sustainability news.",
-            language = "en",
-            region = "Global",
-            category = FeedCategory.NEWS,
-            defaultFeedUrl = "https://plantbasednews.org/feed/"
-        ),
-        ProviderDefinition(
-            id = "BBCNews",
-            label = "BBC News",
-            description = "BBC News international headlines.",
-            language = "en",
-            region = "Global",
-            category = FeedCategory.NEWS,
-            defaultFeedUrl = "https://feeds.bbci.co.uk/news/rss.xml?edition=int"
-        ),
-        ProviderDefinition(
-            id = "BBCWorld",
-            label = "BBC World",
-            description = "BBC world news.",
-            language = "en",
-            region = "Global",
-            category = FeedCategory.NEWS,
-            defaultFeedUrl = "https://feeds.bbci.co.uk/news/world/rss.xml?edition=int"
-        ),
-        ProviderDefinition(
-            id = "BBCBusiness",
-            label = "BBC Business",
-            description = "BBC business news.",
-            language = "en",
-            region = "Global",
-            category = FeedCategory.ECONOMY,
-            defaultFeedUrl = "https://feeds.bbci.co.uk/news/business/rss.xml?edition=int"
-        ),
-        ProviderDefinition(
-            id = "BBCTechnology",
-            label = "BBC Technology",
-            description = "BBC technology news.",
-            language = "en",
-            region = "Global",
-            category = FeedCategory.TECHNOLOGY,
-            defaultFeedUrl = "https://feeds.bbci.co.uk/news/technology/rss.xml?edition=int"
-        ),
-        ProviderDefinition(
-            id = "BBCScience",
-            label = "BBC Science & Environment",
-            description = "BBC science and environment news.",
-            language = "en",
-            region = "Global",
-            category = FeedCategory.SCIENCE,
-            defaultFeedUrl = "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml?edition=int"
-        )
-    )
-
-    val allIds: Set<String> = all.map { definition -> definition.id }.toSet()
-}
