@@ -5,6 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RES_DIR="$ROOT_DIR/app/src/main/res"
 PLAYSTORE_ICON_PNG="$ROOT_DIR/app/src/main/ic_launcher-playstore.png"
 DESIGN_ASSETS_DIR="$ROOT_DIR/design-assets"
+FASTLANE_IMAGES_DIR="$ROOT_DIR/fastlane/metadata/android/en-US/images"
+FASTLANE_ICON_PNG="$FASTLANE_IMAGES_DIR/icon.png"
+FASTLANE_SCREENSHOTS_DIR="$FASTLANE_IMAGES_DIR/phoneScreenshots"
 
 MENU_SVG_DEFAULT="$DESIGN_ASSETS_DIR/ubik_logo.svg"
 ICON_SVG_DEFAULT="$DESIGN_ASSETS_DIR/ubik_image.svg"
@@ -14,6 +17,7 @@ ICON_SVG="$ICON_SVG_DEFAULT"
 ICON_PAD_PERCENT="${ICON_PAD_PERCENT:-10}"
 MONO_ICON_PAD_PERCENT="${MONO_ICON_PAD_PERCENT:-33}"
 PLAYSTORE_ICON_PAD_PERCENT="${PLAYSTORE_ICON_PAD_PERCENT:-16}"
+SCREENSHOTS_SRC_DIR="${SCREENSHOTS_SRC_DIR:-$DESIGN_ASSETS_DIR/screenshots}"
 
 usage() {
   cat <<EOF
@@ -33,10 +37,14 @@ Outputs:
   - $ROOT_DIR/app/src/main/ic_launcher-playstore.png
   - $RES_DIR/mipmap-*/ic_launcher.(webp|png)
   - $RES_DIR/mipmap-*/ic_launcher_round.(webp|png)
+  - $ROOT_DIR/fastlane/metadata/android/en-US/images/icon.png
+  - $ROOT_DIR/fastlane/metadata/android/en-US/images/phoneScreenshots/*.png (if present)
 
 Notes:
   - For mipmaps, script prefers WebP if converter is available.
-  - Square composed icons use ICON_PAD_PERCENT (default: 36). Round and monochrome composed icons use MONO_ICON_PAD_PERCENT (default: 31).
+  - For F-Droid/Fastlane metadata, generated Play Store icon is copied to images/icon.png.
+  - Optional screenshots are copied from SCREENSHOTS_SRC_DIR (default: $DESIGN_ASSETS_DIR/screenshots).
+  - Square composed icons use ICON_PAD_PERCENT (default: 10). Round and monochrome composed icons use MONO_ICON_PAD_PERCENT (default: 33).
   - If WebP conversion tool is missing, it falls back to PNG.
 EOF
 }
@@ -228,6 +236,25 @@ generate_monochrome_icon_png "$ICON_SVG" "$RES_DIR/drawable-nodpi/ic_launcher_mo
 
 log "Generating Play Store launcher image"
 generate_square_icon_png "$ICON_SVG" "$PLAYSTORE_ICON_PNG" 512 "$PLAYSTORE_ICON_PAD_PERCENT"
+
+log "Syncing Fastlane/F-Droid metadata icon"
+mkdir -p "$FASTLANE_IMAGES_DIR" "$FASTLANE_SCREENSHOTS_DIR"
+cp "$PLAYSTORE_ICON_PNG" "$FASTLANE_ICON_PNG"
+
+if [[ -d "$SCREENSHOTS_SRC_DIR" ]]; then
+  shopt -s nullglob
+  screenshot_files=("$SCREENSHOTS_SRC_DIR"/*.png)
+  shopt -u nullglob
+
+  if (( ${#screenshot_files[@]} > 0 )); then
+    cp "${screenshot_files[@]}" "$FASTLANE_SCREENSHOTS_DIR/"
+    log "Copied ${#screenshot_files[@]} screenshot(s) to Fastlane metadata"
+  else
+    log "No PNG screenshots found in $SCREENSHOTS_SRC_DIR; skipping screenshot sync"
+  fi
+else
+  log "Screenshot source directory not found ($SCREENSHOTS_SRC_DIR); skipping screenshot sync"
+fi
 
 declare -a DENSITIES=(
   "mdpi:48"
