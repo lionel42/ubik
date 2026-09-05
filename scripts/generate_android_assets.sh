@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RES_DIR="$ROOT_DIR/app/src/main/res"
+PLAYSTORE_ICON_PNG="$ROOT_DIR/app/src/main/ic_launcher-playstore.png"
 DESIGN_ASSETS_DIR="$ROOT_DIR/design-assets"
 
 MENU_SVG_DEFAULT="$DESIGN_ASSETS_DIR/ubik_logo.svg"
@@ -10,8 +11,9 @@ ICON_SVG_DEFAULT="$DESIGN_ASSETS_DIR/ubik_image.svg"
 
 MENU_SVG="$MENU_SVG_DEFAULT"
 ICON_SVG="$ICON_SVG_DEFAULT"
-ICON_PAD_PERCENT="${ICON_PAD_PERCENT:-30}"
-ROUND_ICON_PAD_PERCENT="${ROUND_ICON_PAD_PERCENT:-12}"
+ICON_PAD_PERCENT="${ICON_PAD_PERCENT:-10}"
+MONO_ICON_PAD_PERCENT="${MONO_ICON_PAD_PERCENT:-33}"
+PLAYSTORE_ICON_PAD_PERCENT="${PLAYSTORE_ICON_PAD_PERCENT:-16}"
 
 usage() {
   cat <<EOF
@@ -28,12 +30,13 @@ Outputs:
   - $RES_DIR/drawable-nodpi/app_menu_logo.png
   - $RES_DIR/drawable-nodpi/ic_launcher_logo.png
   - $RES_DIR/drawable-nodpi/ic_launcher_round_logo.png
+  - $ROOT_DIR/app/src/main/ic_launcher-playstore.png
   - $RES_DIR/mipmap-*/ic_launcher.(webp|png)
   - $RES_DIR/mipmap-*/ic_launcher_round.(webp|png)
 
 Notes:
   - For mipmaps, script prefers WebP if converter is available.
-  - Square and round composed icons use ICON_PAD_PERCENT (default: 1).
+  - Square composed icons use ICON_PAD_PERCENT (default: 36). Round and monochrome composed icons use MONO_ICON_PAD_PERCENT (default: 31).
   - If WebP conversion tool is missing, it falls back to PNG.
 EOF
 }
@@ -149,52 +152,61 @@ cleanup_icon_variants() {
   rm -f "$dir/${base}.png" "$dir/${base}.webp" "$dir/${base}.jpg" "$dir/${base}.jpeg"
 }
 
+generate_composed_icon_png() {
+  local input_svg="$1"
+  local output_png="$2"
+  local size="$3"
+  local pad_percent="${4:-$ICON_PAD_PERCENT}"
+  local background_markup="${5:-}"
+
+  local input_abs
+  input_abs="$(cd "$(dirname "$input_svg")" && pwd)/$(basename "$input_svg")"
+
+  local pad=$(( size * pad_percent / 100 ))
+  local inner=$(( size - (2 * pad) ))
+
+  local composed_svg="$TMP_DIR/composed_icon_${size}.svg"
+
+  cat > "$composed_svg" <<EOF
+<svg xmlns="http://www.w3.org/2000/svg" width="$size" height="$size" viewBox="0 0 $size $size">
+${background_markup}
+  <image href="file://$input_abs" x="$pad" y="$pad" width="$inner" height="$inner" preserveAspectRatio="xMidYMid meet"/>
+</svg>
+EOF
+
+  render_svg_to_png "$composed_svg" "$output_png" "$size" "$size"
+}
+
 generate_round_icon_png() {
   local input_svg="$1"
   local output_png="$2"
   local size="$3"
 
-  local input_abs
-  input_abs="$(cd "$(dirname "$input_svg")" && pwd)/$(basename "$input_svg")"
-
-  local pad=$(( size * ROUND_ICON_PAD_PERCENT / 100 ))
-  local inner=$(( size - (2 * pad) ))
   local center=$(( size / 2 ))
   local radius=$(( size * 48 / 100 ))
+  local background_markup="  <circle cx=\"$center\" cy=\"$center\" r=\"$radius\" fill=\"#1D4ED8\"/>"
 
-  local round_svg="$TMP_DIR/round_icon_${size}.svg"
-
-  cat > "$round_svg" <<EOF
-<svg xmlns="http://www.w3.org/2000/svg" width="$size" height="$size" viewBox="0 0 $size $size">
-  <circle cx="$center" cy="$center" r="$radius" fill="#1D4ED8"/>
-  <image href="file://$input_abs" x="$pad" y="$pad" width="$inner" height="$inner" preserveAspectRatio="xMidYMid meet"/>
-</svg>
-EOF
-
-  render_svg_to_png "$round_svg" "$output_png" "$size" "$size"
+  generate_composed_icon_png "$input_svg" "$output_png" "$size" "$MONO_ICON_PAD_PERCENT" "$background_markup"
 }
 
 generate_square_icon_png() {
   local input_svg="$1"
   local output_png="$2"
   local size="$3"
+  local pad_percent="${4:-$ICON_PAD_PERCENT}"
 
-  local input_abs
-  input_abs="$(cd "$(dirname "$input_svg")" && pwd)/$(basename "$input_svg")"
+  local background_markup="  <rect x=\"0\" y=\"0\" width=\"$size\" height=\"$size\" fill=\"#1D4ED8\"/>"
 
-  local pad=$(( size * ICON_PAD_PERCENT / 100 ))
-  local inner=$(( size - (2 * pad) ))
+  generate_composed_icon_png "$input_svg" "$output_png" "$size" "$pad_percent" "$background_markup"
+}
 
-  local square_svg="$TMP_DIR/square_icon_${size}.svg"
+generate_monochrome_icon_png() {
+  local input_svg="$1"
+  local output_png="$2"
+  local size="$3"
+  local pad_percent="${4:-$MONO_ICON_PAD_PERCENT}"
 
-  cat > "$square_svg" <<EOF
-<svg xmlns="http://www.w3.org/2000/svg" width="$size" height="$size" viewBox="0 0 $size $size">
-  <rect x="0" y="0" width="$size" height="$size" fill="#1D4ED8"/>
-  <image href="file://$input_abs" x="$pad" y="$pad" width="$inner" height="$inner" preserveAspectRatio="xMidYMid meet"/>
-</svg>
-EOF
-
-  render_svg_to_png "$square_svg" "$output_png" "$size" "$size"
+  generate_composed_icon_png "$input_svg" "$output_png" "$size" "$pad_percent"
 }
 
 TMP_DIR="$ROOT_DIR/.asset-gen-tmp"
@@ -212,7 +224,10 @@ log "Generating adaptive round launcher foreground bitmap"
 generate_round_icon_png "$ICON_SVG" "$RES_DIR/drawable-nodpi/ic_launcher_round_logo.png" 432
 
 log "Generating monochrome launcher bitmap (no background)"
-render_svg_to_png "$ICON_SVG" "$RES_DIR/drawable-nodpi/ic_launcher_mono_logo.png" 432 432
+generate_monochrome_icon_png "$ICON_SVG" "$RES_DIR/drawable-nodpi/ic_launcher_mono_logo.png" 432
+
+log "Generating Play Store launcher image"
+generate_square_icon_png "$ICON_SVG" "$PLAYSTORE_ICON_PNG" 512 "$PLAYSTORE_ICON_PAD_PERCENT"
 
 declare -a DENSITIES=(
   "mdpi:48"
