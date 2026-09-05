@@ -21,7 +21,7 @@ class AggregatedNewsProvider(
     override suspend fun fetchLatest(): List<NewsArticle> = withContext(Dispatchers.IO) {
         val providerInstances: List<Pair<String, NewsProvider>> = providers
             .filter { def -> def.id in enabledSources }
-            .map { def -> def.id to SimpleRssProvider(def.feedUrl) }
+            .map { def -> def.id to RssProvider(def.feedUrl) }
 
         val tasks = providerInstances.map { (name, provider) ->
             async {

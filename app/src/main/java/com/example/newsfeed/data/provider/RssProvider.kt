@@ -14,11 +14,11 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Generic RSS provider for simple RSS feeds.
- * Parses standard RSS 2.0 feeds and returns articles.
+ * Generic provider for RSS/Atom feeds.
+ * Parses standard RSS 2.0 and Atom feeds and returns articles.
  * Does not support pagination or HTML-based older articles.
  */
-open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
+open class RssProvider(val feedUrl: String) : NewsProvider {
     override val initialCursor: String? = null
 
     /**
@@ -36,7 +36,7 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
         connection.setRequestProperty("User-Agent", "UbikAndroid/1.0")
 
         connection.inputStream.use { input ->
-            parseRss(input).sortedByDescending { article -> article.publishedAtEpochMs }
+            parseFeed(input).sortedByDescending { article -> article.publishedAtEpochMs }
         }
     }
 
@@ -45,7 +45,7 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
         return PagedResult(items = emptyList(), nextCursor = null)
     }
 
-    private fun parseRss(input: InputStream): List<NewsArticle> {
+    private fun parseFeed(input: InputStream): List<NewsArticle> {
         val items = mutableListOf<NewsArticle>()
         val parserFactory = XmlPullParserFactory.newInstance()
         val parser = parserFactory.newPullParser().apply {
@@ -53,35 +53,68 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
         }
 
         var eventType = parser.eventType
-        var inItem = false
+        var inEntry = false
+        var entryTag = ""
         var title = ""
         var link = ""
         var category = ""
-        var pubDate = ""
+        var published = ""
         var description = ""
         var imageUrl: String? = null
 
         while (eventType != XmlPullParser.END_DOCUMENT) {
             when (eventType) {
                 XmlPullParser.START_TAG -> {
-                    if (parser.name.equals("item", ignoreCase = true)) {
-                        inItem = true
+                    val tagName = parser.name.lowercase()
+                    if (tagName == "item" || tagName == "entry") {
+                        inEntry = true
+                        entryTag = tagName
                         title = ""
                         link = ""
                         category = ""
-                        pubDate = ""
+                        published = ""
                         description = ""
                         imageUrl = null
-                    } else if (inItem) {
-                        when (parser.name.lowercase()) {
+                    } else if (inEntry) {
+                        when (tagName) {
                             "title" -> title = parser.nextText().trim()
-                            "link" -> link = parser.nextText().trim()
+                            "link" -> {
+                                if (entryTag == "entry") {
+                                    val href = parser.findAttributeValue("href")?.trim().orEmpty()
+                                    val rel = parser.findAttributeValue("rel")?.trim()?.lowercase().orEmpty()
+                                    val contentType = parser.findAttributeValue("type")?.trim().orEmpty()
+                                    val resolved = resolveAtomLinkTargets(
+                                        currentArticleLink = link,
+                                        currentImageUrl = imageUrl,
+                                        href = href,
+                                        rel = rel,
+                                        contentType = contentType
+                                    )
+                                    link = resolved.articleLink
+                                    imageUrl = resolved.imageUrl
+                                } else {
+                                    link = parser.nextText().trim()
+                                }
+                            }
                             "category" -> {
-                                val catText = parser.nextText().trim()
+                                val catText = if (entryTag == "entry") {
+                                    parser.findAttributeValue("term")?.trim().orEmpty()
+                                } else {
+                                    parser.nextText().trim()
+                                }
                                 if (category.isBlank()) category = catText
                             }
-                            "pubdate" -> pubDate = parser.nextText().trim()
+                            "pubdate", "published", "updated" -> {
+                                if (published.isBlank()) {
+                                    published = parser.nextText().trim()
+                                }
+                            }
                             "description" -> description = parser.nextText().trim()
+                            "summary", "content" -> {
+                                if (description.isBlank()) {
+                                    description = parser.nextText().trim()
+                                }
+                            }
                             "media:thumbnail", "media:content", "enclosure" -> {
                                 // BBC and other feeds commonly expose lead image in media/enclosure tags.
                                 val candidateUrl = parser.findAttributeValue("url")
@@ -100,15 +133,17 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
                 }
 
                 XmlPullParser.END_TAG -> {
-                    if (parser.name.equals("item", ignoreCase = true)) {
-                        inItem = false
+                    val tagName = parser.name.lowercase()
+                    if (tagName == entryTag && (tagName == "item" || tagName == "entry")) {
+                        inEntry = false
+                        entryTag = ""
                         if (title.isNotBlank() && link.isNotBlank()) {
                             items += NewsArticle(
                                 title = title,
                                 link = link,
                                 category = categoryFromItem(title, link, category),
-                                pubDateLabel = formatPubDate(pubDate),
-                                publishedAtEpochMs = parsePubDateEpoch(pubDate),
+                                pubDateLabel = formatPubDate(published),
+                                publishedAtEpochMs = parsePubDateEpoch(published),
                                 summary = extractSummary(description),
                                 imageUrl = imageUrl ?: extractImageUrl(description)
                             )
@@ -129,5 +164,37 @@ open class SimpleRssProvider(val feedUrl: String) : NewsProvider {
             }
         }
         return null
+    }
+
+    internal data class AtomLinkResolution(
+        val articleLink: String,
+        val imageUrl: String?
+    )
+
+    internal fun resolveAtomLinkTargets(
+        currentArticleLink: String,
+        currentImageUrl: String?,
+        href: String,
+        rel: String,
+        contentType: String
+    ): AtomLinkResolution {
+        if (href.isBlank()) {
+            return AtomLinkResolution(currentArticleLink, currentImageUrl)
+        }
+
+        if (rel == "enclosure") {
+            val isLikelyImage = contentType.isBlank() || contentType.startsWith("image/", ignoreCase = true)
+            val nextImage = if (isLikelyImage && currentImageUrl.isNullOrBlank()) href else currentImageUrl
+            return AtomLinkResolution(currentArticleLink, nextImage)
+        }
+
+        val isPreferredArticleLink = rel.isBlank() || rel == "alternate"
+        val nextArticle = if ((isPreferredArticleLink || currentArticleLink.isBlank()) && !href.startsWith("urn:", ignoreCase = true)) {
+            href
+        } else {
+            currentArticleLink
+        }
+
+        return AtomLinkResolution(nextArticle, currentImageUrl)
     }
 }

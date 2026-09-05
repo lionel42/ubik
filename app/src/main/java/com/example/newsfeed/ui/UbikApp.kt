@@ -55,7 +55,7 @@ import com.example.newsfeed.data.provider.ProviderDefinition
 import com.example.newsfeed.data.provider.AggregatedNewsProvider
 import com.example.newsfeed.data.provider.NewsProvider
 import com.example.newsfeed.data.provider.ProviderConfigLoader
-import com.example.newsfeed.data.provider.SimpleRssProvider
+import com.example.newsfeed.data.provider.RssProvider
 import com.example.newsfeed.data.readLinksKey
 import com.example.newsfeed.data.hiddenArticleElementsKey
 import com.example.newsfeed.data.showAllArticleContentKey
@@ -134,7 +134,7 @@ private fun buildFeedLoadTargets(
             FeedLoadTarget(
                 key = definition.id,
                 sourceLabel = definition.label,
-                provider = SimpleRssProvider(definition.feedUrl)
+                provider = RssProvider(definition.feedUrl)
             )
         }
 }
