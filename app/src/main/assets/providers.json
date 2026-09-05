@@ -126,6 +126,15 @@
       "region": "CH",
       "category": "SCIENCE",
       "feedUrl": "https://rss.existenz.ch/feeds/?action=display&bridge=MeteoSwissBlog&context=Blog&lang=it&format=Atom"
+    },
+    {
+      "id": "ProPublica",
+      "label": "ProPublica",
+      "description": "ProPublica independent investigative journalism.",
+      "language": "en",
+      "region": "US",
+      "category": "NEWS",
+      "feedUrl": "https://www.propublica.org/feeds/propublica/main"
     }
   ]
 }

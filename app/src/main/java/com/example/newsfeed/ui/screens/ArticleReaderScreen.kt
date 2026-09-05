@@ -147,6 +147,9 @@ enum class ArticleHideElement(
         selectors = listOf(
             "[class*=\"promo-banner\"]",
             "[class*=\"rts-download-banner-footer\"]",
+            ".wp-block-propublica-ad-slot",
+            "[id^=\"bsa-zone_\"]",
+            "iframe[aria-label=\"Advertisement\"]",
             "[id*=\"adngin\"]",
             "[id*=\"snigel\"]",
         )
