@@ -99,6 +99,33 @@
       "region": "Global",
       "category": "SCIENCE",
       "feedUrl": "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml?edition=int"
+    },
+    {
+      "id": "MeteoSwissBlogDE",
+      "label": "MeteoSchweiz Blog",
+      "description": "Blog von MeteoSchweiz. Tägliche Artikel über Wetter und Klima in der Schweiz.",
+      "language": "de",
+      "region": "CH",
+      "category": "SCIENCE",
+      "feedUrl": "https://rss.existenz.ch/feeds/?action=display&bridge=MeteoSwissBlog&context=Blog&lang=de&format=Atom"
+    },
+    {
+      "id": "MeteoSwissBlogFR",
+      "label": "MeteoSuisse Blog",
+      "description": "Blog de MeteoSuisse. Un article journalier sur la météo et le climat en Suisse.",
+      "language": "fr",
+      "region": "CH",
+      "category": "SCIENCE",
+      "feedUrl": "https://rss.existenz.ch/feeds/?action=display&bridge=MeteoSwissBlog&context=Blog&lang=fr&format=Atom"
+    },
+    {
+      "id": "MeteoSwissBlogIT",
+      "label": "MeteoSvizzera Blog",
+      "description": "Blog di MeteoSvizzera. Un articolo giornaliero sulla meteorologia e il clima in Svizzera.",
+      "language": "it",
+      "region": "CH",
+      "category": "SCIENCE",
+      "feedUrl": "https://rss.existenz.ch/feeds/?action=display&bridge=MeteoSwissBlog&context=Blog&lang=it&format=Atom"
     }
   ]
 }
