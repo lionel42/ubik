@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui.screens
+package io.github.ubik.ui.screens
 
 import android.content.Intent
 import android.net.Uri
@@ -22,8 +22,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.newsfeed.model.NewsArticle
-import com.example.newsfeed.ui.components.UbikLogo
+import io.github.ubik.model.NewsArticle
+import io.github.ubik.ui.components.UbikLogo
 
 enum class ArticleHideElement(
     val storageKey: String,

@@ -1,6 +1,6 @@
-package com.example.newsfeed.data.provider
+package io.github.ubik.data.provider
 
-import com.example.newsfeed.model.NewsArticle
+import io.github.ubik.model.NewsArticle
 
 data class PagedResult(
     val items: List<NewsArticle>,

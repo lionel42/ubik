@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui
+package io.github.ubik.ui
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document

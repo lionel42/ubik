@@ -1,4 +1,4 @@
-package com.example.newsfeed
+package io.github.ubik
 
 import org.junit.Test
 

@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui
+package io.github.ubik.ui
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

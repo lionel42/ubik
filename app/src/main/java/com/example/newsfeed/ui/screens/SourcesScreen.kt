@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui.screens
+package io.github.ubik.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.newsfeed.data.provider.ProviderDefinition
+import io.github.ubik.data.provider.ProviderDefinition
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

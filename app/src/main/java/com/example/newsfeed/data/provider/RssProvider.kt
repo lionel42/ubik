@@ -1,10 +1,10 @@
-package com.example.newsfeed.data.provider
+package io.github.ubik.data.provider
 
-import com.example.newsfeed.model.NewsArticle
-import com.example.newsfeed.util.extractImageUrl
-import com.example.newsfeed.util.extractSummary
-import com.example.newsfeed.util.formatPubDate
-import com.example.newsfeed.util.parsePubDateEpoch
+import io.github.ubik.model.NewsArticle
+import io.github.ubik.util.extractImageUrl
+import io.github.ubik.util.extractSummary
+import io.github.ubik.util.formatPubDate
+import io.github.ubik.util.parsePubDateEpoch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.xmlpull.v1.XmlPullParser

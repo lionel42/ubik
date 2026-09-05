@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui.theme
+package io.github.ubik.ui.theme
 
 import android.app.Activity
 import android.os.Build

@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui.components
+package io.github.ubik.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
-import com.example.newsfeed.R
+import io.github.ubik.R
 
 @Composable
 fun UbikLogo(

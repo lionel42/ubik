@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "newsfeed"
+rootProject.name = "ubik"
 include(":app")

@@ -1,4 +1,4 @@
-package com.example.newsfeed.data.provider
+package io.github.ubik.data.provider
 
 import android.content.Context
 import android.util.Log

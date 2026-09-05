@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui.screens
+package io.github.ubik.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.rememberScrollState

@@ -1,4 +1,4 @@
-package com.example.newsfeed.data
+package io.github.ubik.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.stringSetPreferencesKey

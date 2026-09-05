@@ -1,4 +1,4 @@
-package com.example.newsfeed.util
+package io.github.ubik.util
 
 import androidx.core.text.HtmlCompat
 import java.net.URI

@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui.screens
+package io.github.ubik.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.newsfeed.ui.components.UbikLogo
+import io.github.ubik.ui.components.UbikLogo
 import java.util.Locale
 
 private data class ToggleFilterItem(

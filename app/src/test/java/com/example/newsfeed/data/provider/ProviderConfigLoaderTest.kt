@@ -1,4 +1,4 @@
-package com.example.newsfeed.data.provider
+package io.github.ubik.data.provider
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

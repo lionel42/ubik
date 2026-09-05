@@ -1,4 +1,4 @@
-package com.example.newsfeed.data.provider
+package io.github.ubik.data.provider
 
 /** Broad thematic category for a provider. */
 enum class FeedCategory(val label: String) {

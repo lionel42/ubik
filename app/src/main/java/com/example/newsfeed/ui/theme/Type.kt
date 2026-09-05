@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui.theme
+package io.github.ubik.ui.theme
 
 import androidx.compose.material3.Typography
 

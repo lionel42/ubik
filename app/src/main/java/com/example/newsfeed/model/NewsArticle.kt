@@ -1,4 +1,4 @@
-package com.example.newsfeed.model
+package io.github.ubik.model
 
 data class NewsArticle(
     val title: String,

@@ -1,4 +1,4 @@
-package com.example.newsfeed.ui.components
+package io.github.ubik.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -30,8 +30,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.newsfeed.model.NewsArticle
-import com.example.newsfeed.util.canonicalArticleKey
+import io.github.ubik.model.NewsArticle
+import io.github.ubik.util.canonicalArticleKey
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
