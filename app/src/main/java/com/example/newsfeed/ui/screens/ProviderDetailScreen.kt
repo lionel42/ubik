@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +36,7 @@ import com.example.newsfeed.data.provider.ProviderDefinition
 @Composable
 fun ProviderDetailScreen(
     provider: ProviderDefinition,
+    onOpenProviderFlux: () -> Unit,
     onBack: () -> Unit
 ) {
     BackHandler(onBack = onBack)
@@ -108,6 +110,14 @@ fun ProviderDetailScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(12.dp)
                 )
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = onOpenProviderFlux,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Open flux")
             }
 
             Spacer(Modifier.height(8.dp))

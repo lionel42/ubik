@@ -205,6 +205,13 @@ fun UbikApp(defaultProvider: NewsProvider? = null) {
         .collectAsState(initial = null)
     val enabledSources = enabledSourcesLoaded ?: allSourceIds
     var selectedProviderForDetail by remember { mutableStateOf<String?>(null) }
+    var selectedProviderForFeed by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val selectedProviderLabelForFeed = remember(selectedProviderForFeed, sourceDefinitions) {
+        selectedProviderForFeed?.let { providerId ->
+            sourceDefinitions.firstOrNull { definition -> definition.id == providerId }?.label
+        }
+    }
 
     val provider = remember(sourceDefinitions, enabledSources) {
         defaultProvider ?: AggregatedNewsProvider(
@@ -302,9 +309,13 @@ fun UbikApp(defaultProvider: NewsProvider? = null) {
                     nextCursor = defaultProvider.initialCursor
                     hasLoadedOnce = true
                 } else {
+                    val effectiveSourceIds = selectedProviderForFeed?.let { selectedId ->
+                        setOf(selectedId)
+                    } ?: enabledSources
+
                     val loadTargets = buildFeedLoadTargets(
                         providers = sourceDefinitions,
-                        enabledSources = enabledSources
+                        enabledSources = effectiveSourceIds
                     )
 
                     if (loadTargets.isEmpty()) {
@@ -416,7 +427,7 @@ fun UbikApp(defaultProvider: NewsProvider? = null) {
 
     // On first composition (and whenever sources change), wait for DataStore to have
     // emitted the real saved preferences before loading, so startup matches manual reload.
-    LaunchedEffect(defaultProvider ?: provider) {
+    LaunchedEffect(defaultProvider ?: provider, selectedProviderForFeed) {
         if (defaultProvider == null && enabledSourcesLoaded == null) {
             snapshotFlow { enabledSourcesLoaded }
                 .filter { loaded -> loaded != null }
@@ -508,6 +519,10 @@ fun UbikApp(defaultProvider: NewsProvider? = null) {
             } else {
                 ProviderDetailScreen(
                     provider = providerDef,
+                    onOpenProviderFlux = {
+                        selectedProviderForFeed = providerDef.id
+                        currentScreen = AppScreen.FEED
+                    },
                     onBack = { currentScreen = AppScreen.SOURCES }
                 )
             }
@@ -543,10 +558,25 @@ fun UbikApp(defaultProvider: NewsProvider? = null) {
                             )
                         },
                         actions = {
-                            IconButton(onClick = { currentScreen = AppScreen.SOURCES }) {
+                            IconButton(onClick = {
+                                if (selectedProviderForFeed == null) {
+                                    currentScreen = AppScreen.SOURCES
+                                } else {
+                                    selectedProviderForFeed = null
+                                }
+                            }) {
                                 Icon(
                                     imageVector = Icons.Filled.Newspaper,
-                                    contentDescription = "Sources"
+                                    contentDescription = if (selectedProviderLabelForFeed == null) {
+                                        "Sources"
+                                    } else {
+                                        "Show all enabled providers"
+                                    },
+                                    tint = if (selectedProviderForFeed != null) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        LocalContentColor.current
+                                    }
                                 )
                             }
                             IconButton(onClick = { currentScreen = AppScreen.FILTERS }) {
